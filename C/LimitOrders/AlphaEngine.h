@@ -10,13 +10,12 @@ private:
     CoastLineTrader* longCoastlineTraders[];
     CoastLineTrader* shortCoastlineTraders[];
 
+    void initiateTraders();
 
 public:
     AlphaEngine();
 
     void run(Price price);
-
-    void initiateTraders();
 };
 
 #endif

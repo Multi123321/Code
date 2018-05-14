@@ -2,6 +2,7 @@
 #define LIMIT_ORDER_H
 
 #include "Price.h"
+#include <list>
 
 class LimitOrder
 {
@@ -16,10 +17,23 @@ private:
 
 
 public:
-    int i;
-    list<LimitOrder> compensatedOrders;
+    std::list<LimitOrder> compensatedOrders;
 
-    static double CumNorm(double x);
+    LimitOrder(int type, Price priceOpened, double level, float volume, int dcORos, double delta);
+
+    LimitOrder clone();
+
+    void setLevel(double level);
+    int getType();
+    double getLevel();
+    float getVolume();
+    int getDcORos();
+    double getDelta();
+    void addCompensatedOrder(LimitOrder compensatedOrders);
+    void cleanCompensatedList();
+    void setCompensatedOrders(std::list<LimitOrder> compensatedOrders);
+    float computeCompensatedVolume();
+    double getRelativePnL();
 };
 
 #endif
