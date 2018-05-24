@@ -18,6 +18,17 @@ public class AlphaEngine {
         }
     }
 
+    public void printAllProfits()
+    {
+        for (CoastlineTrader coastlineTrader : longCoastlineTraders){
+            System.out.println("Profit: " + coastlineTrader.getRealizedProfit());
+        }
+        for (CoastlineTrader coastlineTrader: shortCoastlineTraders){
+            System.out.println("Profit: " + coastlineTrader.getRealizedProfit());
+        }
+
+    }
+
 
     private void initiateTraders(){
         longCoastlineTraders = new CoastlineTrader[4];

@@ -6,6 +6,8 @@ public class AlphaEnginePublic {
         for (Price price : priceFeed){ // please use your own price feed
             alphaEngine.run(price);
         }
+
+        alphaEngine.printAllProfits();
     }
 
 }
