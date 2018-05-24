@@ -16,6 +16,7 @@ public class CoastlineTrader {
     private double realizedProfit; // is the total profit of all closed positions
     private double positionRealizedProfit; // is the total profit of all de-cascading orders
     private double originalDelta;
+    private double targetAbsPnL; //temporary fix
 
     /**
      * @param originalDelta used to define H1 and H1 of the liquidity indicator.
@@ -34,6 +35,7 @@ public class CoastlineTrader {
         disbalancedOrders = new LinkedList<>();
         realizedProfit = 0.0;
         positionRealizedProfit = 0.0;
+        targetAbsPnL = 15; //temporary fix
     }
 
 
@@ -71,7 +73,8 @@ public class CoastlineTrader {
                 cancelBuyLimitOrder();
             }
             int properRunnerIndex = findProperRunnerIndex();
-            if (events[properRunnerIndex] != 0){ // if an event happened, but we have not a limit order at
+            if (events[properRunnerIndex] != 0){ 
+                // if an event happened, but we have not a limit order at
                 // that level, than we should replace all active limit orders. I. e., should use the putOrders
                 // method. And it does not matter what kind of event just happened.
                 cancelBuyLimitOrder();
@@ -111,7 +114,7 @@ public class CoastlineTrader {
 
     /**
      * Once called the method will put two orders to the order book: limit order sell at the deltaUp from the current
-     * price and limit orders sell at the deltaDown form the actual price.
+     * price and stop orders sell at the deltaDown form the actual price.
      * Prior to putting the limit orders, the method updates init size and thresholds.
      * @param price is the current price
      */
@@ -131,14 +134,14 @@ public class CoastlineTrader {
         int buyDcOROS, sellDcOrOS;
         double buyDelta, sellDelta;
         if (runnerMode == -1){
-            buyDcOROS = 2;
+            buyDcOROS = 2; // overshoot
             buyDelta = dStarDown;
-            sellDcOrOS = 1;
+            sellDcOrOS = 1; // directional change
             sellDelta = deltaUp;
         } else {
-            buyDcOROS = 1;
+            buyDcOROS = 1; // directional change
             buyDelta = deltaDown;
-            sellDcOrOS = 2;
+            sellDcOrOS = 2; // overshoot
             sellDelta = dStarUp;
         }
 
@@ -146,7 +149,7 @@ public class CoastlineTrader {
             if (disbalancedOrders.size() == 0){ // if there is no disbalanced orders then we just open a new position.
                 sellLimitOrder = null;
                 buyLimitOrder = new LimitOrder(1, price.clone(), expectedLowerIE, cascadeVol, lowerIEtype, dStarDown);
-                computeTargetRelatPnL(buyLimitOrder);
+                //computeTargetRelatPnL(buyLimitOrder); //temporary fix
             } else {
                 buyLimitOrder = new LimitOrder(1, price.clone(), expectedLowerIE, cascadeVol, buyDcOROS, buyDelta);
                 LinkedList<LimitOrder> compensatedOrdersList = findCompensatedOrdersList(expectedUpperIE, originalDelta, -1);
@@ -164,7 +167,7 @@ public class CoastlineTrader {
                 // we just open a new position.
                 buyLimitOrder = null;
                 sellLimitOrder = new LimitOrder(-1, price.clone(), expectedUpperIE, cascadeVol, upperIEtype, deltaUp);
-                computeTargetRelatPnL(sellLimitOrder);
+                //computeTargetRelatPnL(sellLimitOrder); //temporary fix
             } else {
                 LinkedList<LimitOrder> compensatedOrdersList = findCompensatedOrdersList(expectedLowerIE, originalDelta, 1);
                 if (compensatedOrdersList.size() != 0){
