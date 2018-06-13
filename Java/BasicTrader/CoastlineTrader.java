@@ -43,15 +43,20 @@ public class CoastlineTrader{
 		}
 		
 		double computePnl(PriceFeedData price){
-			// TODO:
-			// Compute PnL with current price
-			return 0.0;
+			Double profitLoss = 0;
+			for (int i = 0; i  < sizes.size(); i++) {
+				profitLoss += sizes.get(i)*(price-prices.get(i))
+			}
+			return profitLoss;
 		}
 		
 		double computePnlLastPrice(){
-			// TODO:
-			// Compute PnL with last available price
-			return 0.0;
+			Double lastPrice = prices.getLast();
+			Double profitLoss = 0;
+			for (int i = 0; i  < sizes.size(); i++) {
+				profitLoss += sizes.get(i).doubleValue()*(lastPrice-prices.get(i).doubleValue())
+			}
+			return profitLoss;
 		}
 		double getPercPnl(PriceFeedData price){
 			// TODO:
@@ -60,9 +65,7 @@ public class CoastlineTrader{
 		}
 		
 		boolean tryToClose(PriceFeedData price){
-			// TODO:
-			// Check if PnL target hit implementation
-			return false;
+			return ((computePnl(price)+tempPnl) >= profitTarget);
 		}
 		
 		boolean assignCashTarget(){
