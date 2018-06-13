@@ -35,7 +35,7 @@ public class CoastlineTrader {
         disbalancedOrders = new LinkedList<>();
         realizedProfit = 0.0;
         positionRealizedProfit = 0.0;
-        targetAbsPnL = 15; //temporary fix
+        targetAbsPnL = 2; //temporary fix
     }
 
 
@@ -149,7 +149,7 @@ public class CoastlineTrader {
             if (disbalancedOrders.size() == 0){ // if there is no disbalanced orders then we just open a new position.
                 sellLimitOrder = null;
                 buyLimitOrder = new LimitOrder(1, price.clone(), expectedLowerIE, cascadeVol, lowerIEtype, dStarDown);
-                //computeTargetRelatPnL(buyLimitOrder); //temporary fix
+                //computeTargetRelatPnL(buyLimitOrder); //TODO temporary fix
             } else {
                 buyLimitOrder = new LimitOrder(1, price.clone(), expectedLowerIE, cascadeVol, buyDcOROS, buyDelta);
                 LinkedList<LimitOrder> compensatedOrdersList = findCompensatedOrdersList(expectedUpperIE, originalDelta, -1);
