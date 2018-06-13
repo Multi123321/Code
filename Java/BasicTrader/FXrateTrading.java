@@ -1,3 +1,7 @@
+
+import java.io.IOException;
+import java.io.FileWriter;
+
 public class FXrateTrading{
 		CoastlineTrader[] coastTraderLong, coastTraderShort;
 		String FXrate;

@@ -1,3 +1,6 @@
+import java.util.LinkedList;
+import java.util.List;
+
 public class CoastlineTrader{
 		double tP; /* -- Total position -- */
 		List<Double> prices;
