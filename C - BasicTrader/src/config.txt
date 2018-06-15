@@ -1,2 +1,3 @@
 outputDir=../data/output
 inputDir=../data/input
+exchangeInputDir=../..
