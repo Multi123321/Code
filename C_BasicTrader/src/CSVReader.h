@@ -24,7 +24,8 @@ public:
         string thisVal;
         string cvsSplitBy = ";";
         PriceFeedData* prices = new PriceFeedData();
-        ifstream inputFile = functions::openInputFile(configValues["exchangeInputDir"],  filepath);
+        ifstream inputFile;
+        functions::openInputFile(inputFile, configValues["exchangeInputDir"],  filepath);
 
         std::getline(inputFile, line);
 

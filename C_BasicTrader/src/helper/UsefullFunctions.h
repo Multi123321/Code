@@ -13,28 +13,28 @@ namespace functions
     static string binDir;
 
 
-    static ofstream openOutputFile(string path, string fileName, std::ios_base::openmode mode = std::ofstream::out)
+    inline static int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode = std::ofstream::out)
     {
-        ofstream result(binDir + "/" + path + "/" + fileName, mode);
-        if(!result.good())
+        outputFileStream.open(binDir + "/" + path + "/" + fileName, mode);
+        if(!outputFileStream.good())
         {
             cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
-            exit(EXIT_FAILURE);
+            return false;
         }
 
-        return result;
+        return true;
     }
 
-    static ifstream openInputFile(string path, string fileName)
+    inline static int openInputFile(ifstream & inputFileStream, string path, string fileName)
     {
-        ifstream result(binDir + "/" + path + "/" + fileName);
-        if(!result.good())
+        inputFileStream.open(binDir + "/" + path + "/" + fileName);
+        if(!inputFileStream.good())
         {
             cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
-            exit(EXIT_FAILURE);
+            return false;
         }
 
-        return result;
+        return true;
     }
 
     using std::string;

@@ -51,7 +51,8 @@ bool FXrateTrading::runTradingAsymm(PriceFeedData::Price price)
 
 bool FXrateTrading::printDataHeader()
 {
-    ofstream outputFile = functions::openOutputFile(configValues["outputDir"], "DataAsymmLiq.csv");
+    ofstream outputFile;
+    functions::openOutputFile(outputFile, configValues["outputDir"], "DataAsymmLiq.csv");
     
     outputFile << "time, totalPnl, totalPnlPerc, totalPos, totalLong, totalShort, price" << endl;
     outputFile.close();
@@ -62,7 +63,8 @@ bool FXrateTrading::printDataHeader()
 
 bool FXrateTrading::printDataAsymm(double time)
 {
-    ofstream outputFile = functions::openOutputFile(configValues["outputDir"], "DataAsymmLiq.csv", ofstream::app);
+    ofstream outputFile;
+    functions::openOutputFile(outputFile, configValues["outputDir"], "DataAsymmLiq.csv", ofstream::app);
     
     double totalPos = 0.0, totalShort = 0.0, totalLong = 0.0; 
     double totalPnl = 0.0; 

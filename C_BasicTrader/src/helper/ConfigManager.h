@@ -21,7 +21,8 @@ namespace config
     {
         string line;
 
-        ifstream fileStream = functions::openInputFile(".", "config.txt");
+        ifstream fileStream;
+        functions::openInputFile(fileStream, ".", "config.txt");
 
         while (getline(fileStream, line))
         {
