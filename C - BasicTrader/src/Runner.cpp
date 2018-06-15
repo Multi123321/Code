@@ -7,19 +7,19 @@
 Runner::Runner()
 {}
 
-Runner::Runner(double threshUp, double threshDown, PriceFeedData price, std::string file, double dStarUp, double dStarDown) :
+Runner::Runner(double threshUp, double threshDown, PriceFeedData::Price price, std::string file, double dStarUp, double dStarDown) :
     deltaUp(threshUp), deltaDown(threshDown), deltaStarUp(dStarUp), deltaStarDown(dStarDown)
 {
-    prevExtreme = price.elems.mid; 
-    prevExtremeTime = price.elems.time;
+    prevExtreme = price.mid; 
+    prevExtremeTime = price.time;
 
-    prevDC = price.elems.mid; 
-    prevDCTime = price.elems.time;
+    prevDC = price.mid; 
+    prevDCTime = price.time;
 
-    extreme = price.elems.mid; 
-    extremeTime = price.elems.time;
+    extreme = price.mid; 
+    extremeTime = price.time;
 
-    reference = price.elems.mid;
+    reference = price.mid;
     
     type = -1; 
     osL = 0.0; 
@@ -54,34 +54,35 @@ Runner::Runner(double threshUp, double threshDown, std::string file, double dSta
     fileName = std::string(file);
 }
 
-int Runner::run(PriceFeedData price)
+int Runner::run(PriceFeedData::Price price)
 {
-    if( &price == NULL )
-        return 0;
+    //TODO: search for better way...
+    // if( &price == NULL )
+    //     return 0;
 
     if( !initalized ){
         type = -1; osL = 0.0; initalized = true;
-        prevExtreme = price.elems.mid; prevExtremeTime = price.elems.time;
-        prevDC = price.elems.mid; prevDCTime = price.elems.time;
-        extreme = price.elems.mid; extremeTime = price.elems.time;
-        reference = price.elems.mid;
+        prevExtreme = price.mid; prevExtremeTime = price.time;
+        prevDC = price.mid; prevDCTime = price.time;
+        extreme = price.mid; extremeTime = price.time;
+        reference = price.mid;
         
         return 0;
     }
 
     if( type == -1 ){
-        if( log(price.elems.bid/extreme) >= deltaUp ){
+        if( log(price.bid/extreme) >= deltaUp ){
             prevExtreme = extreme;
             prevExtremeTime = extremeTime;
             type = 1;
-            extreme = price.elems.ask; extremeTime = price.elems.time;
-            prevDC = price.elems.ask; prevDCTime = price.elems.time;
-            reference = price.elems.ask;		
+            extreme = price.ask; extremeTime = price.time;
+            prevDC = price.ask; prevDCTime = price.time;
+            reference = price.ask;		
             return 1;
         }
-        if( price.elems.ask < extreme ){
-            extreme = price.elems.ask;
-            extremeTime = price.elems.time;
+        if( price.ask < extreme ){
+            extreme = price.ask;
+            extremeTime = price.time;
             osL = -1 * log(extreme/prevDC)/deltaDown;
             
             if( log(extreme/reference) <= -deltaStarUp ){
@@ -92,18 +93,18 @@ int Runner::run(PriceFeedData price)
         }
     }
     else if( type == 1 ){
-        if( log(price.elems.ask/extreme) <= -deltaDown ){
+        if( log(price.ask/extreme) <= -deltaDown ){
             prevExtreme = extreme; 
             prevExtremeTime = extremeTime;
             type = -1;
-            extreme = price.elems.bid; extremeTime = price.elems.time;
-            prevDC = price.elems.bid; prevDCTime = price.elems.time;
-            reference = price.elems.bid;
+            extreme = price.bid; extremeTime = price.time;
+            prevDC = price.bid; prevDCTime = price.time;
+            reference = price.bid;
             return -1;
         }
-        if( price.elems.bid > extreme ){
-            extreme = price.elems.bid; 
-            extremeTime = price.elems.time;
+        if( price.bid > extreme ){
+            extreme = price.bid; 
+            extremeTime = price.time;
             osL = log(extreme/prevDC)/deltaUp;
             
             if( log(extreme/reference) >= deltaStarDown ){

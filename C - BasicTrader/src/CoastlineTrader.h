@@ -42,12 +42,12 @@ public:
     CoastlineTrader();
     CoastlineTrader(double dOriginal, double dUp, double dDown, double profitT, string FxRate, int lS);
 
-    double computePnl(PriceFeedData price);
+    double computePnl(PriceFeedData::Price price);
     double computePnlLastPrice();
-    double getPercPnl(PriceFeedData price);
-    bool tryToClose(PriceFeedData price);
+    double getPercPnl(PriceFeedData::Price price);
+    bool tryToClose(PriceFeedData::Price price);
     bool assignCashTarget();
-    bool runPriceAsymm(PriceFeedData price, double oppositeInv);
+    bool runPriceAsymm(PriceFeedData::Price price, double oppositeInv);
 };
 
 #endif

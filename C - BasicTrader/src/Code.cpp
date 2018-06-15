@@ -38,8 +38,12 @@ int main(int argc, const char *argv[])
     
     // Run
     PriceFeedData p = PriceFeedData();
-    for( int i = 0; i < numberOfCurrencies; ++i ){
-        trading[i].runTradingAsymm(p);
+    for( int i = 0; i < numberOfCurrencies; ++i )
+    {
+        for (PriceFeedData::Price* price : p.priceFeed)
+        {
+            trading[i].runTradingAsymm(*price);
+        }
     }
 }
 

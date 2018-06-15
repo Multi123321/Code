@@ -42,7 +42,7 @@ double Liquidity::CumNorm(double x)
     return n;
 }
 
-Liquidity::Liquidity(PriceFeedData price, double delta1, double delta2, int lgt)
+Liquidity::Liquidity(PriceFeedData::Price price, double delta1, double delta2, int lgt)
 {
     double prob = exp(-1.0);
     H1 = -(prob*log(prob) + (1.0 - prob)*log(1.0 - prob));
@@ -122,7 +122,7 @@ void Liquidity::getH1nH2()
     cout << "H1:" << H1 << " H2:" << H2;
 }
 
-bool Liquidity::Trigger(PriceFeedData price)
+bool Liquidity::Trigger(PriceFeedData::Price price)
 {
     // -- update values -- 
     bool doComp = false;
@@ -240,8 +240,8 @@ bool Liquidity::computeLiquidity(long deltaT)
 Liquidity::Runner::Runner()
 {}
 
-Liquidity::Runner::Runner(double threshUp, double threshDown, PriceFeedData price, string file) :
-    fileName(file), deltaUp(threshUp), deltaDown(threshDown), prevDC(price.elems.mid), extreme(price.elems.mid)
+Liquidity::Runner::Runner(double threshUp, double threshDown, PriceFeedData::Price price, string file) :
+    fileName(file), deltaUp(threshUp), deltaDown(threshDown), prevDC(price.mid), extreme(price.mid)
 {    
     type = -1; 
     initalized = true;
@@ -260,43 +260,43 @@ Liquidity::Runner::Runner(double threshUp, double threshDown, string file) :
     initalized = false;
 }
 
-int Liquidity::Runner::run(PriceFeedData price)
+int Liquidity::Runner::run(PriceFeedData::Price price)
 {
     // if( &price == NULL )
     //     return 0;
     
     if( !initalized ){
         type = -1; initalized = true;
-        prevDC = price.elems.mid;
-        extreme = price.elems.mid;
+        prevDC = price.mid;
+        extreme = price.mid;
         return 0;
     }
     
     if( type == -1 )
     {
-        if( log(price.elems.bid/extreme) >= deltaUp )
+        if( log(price.bid/extreme) >= deltaUp )
         {
             type = 1;
-            extreme = price.elems.ask; 
-            prevDC = price.elems.ask;	
+            extreme = price.ask; 
+            prevDC = price.ask;	
             return 1;
         }
-        if( price.elems.ask < extreme ){
-            extreme = price.elems.ask;
+        if( price.ask < extreme ){
+            extreme = price.ask;
             return 0;
         }
     }
     else if( type == 1 ){
-        if( log(price.elems.ask/extreme) <= -deltaDown )
+        if( log(price.ask/extreme) <= -deltaDown )
         {
             type = -1;
-            extreme = price.elems.bid;
-            prevDC = price.elems.bid; 
+            extreme = price.bid;
+            prevDC = price.bid; 
             return -1;
         }
-        if( price.elems.bid > extreme )
+        if( price.bid > extreme )
         {
-            extreme = price.elems.bid; 
+            extreme = price.bid; 
             return 0;
         }
     }

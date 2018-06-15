@@ -19,14 +19,14 @@ public:
     
     LocalLiquidity();
     LocalLiquidity(double delta, double deltaUp, double deltaDown, double dStar, double alpha);
-    LocalLiquidity(double delta, double deltaUp, double deltaDown, PriceFeedData price, double dStar, double alpha);
+    LocalLiquidity(double delta, double deltaUp, double deltaDown, PriceFeedData::Price price, double dStar, double alpha);
 
     bool computeH1H2exp(double dStar);
     double CumNorm(double x);
 
-    int run(PriceFeedData price);
+    int run(PriceFeedData::Price price);
 
-    bool computation(PriceFeedData price);
+    bool computation(PriceFeedData::Price price);
 };
 
 #endif

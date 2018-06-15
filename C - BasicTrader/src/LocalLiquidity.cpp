@@ -17,11 +17,11 @@ LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, d
     computeH1H2exp(dStar);
 } 
 
-LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, PriceFeedData price, double dStar, double alpha) : 
+LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, PriceFeedData::Price price, double dStar, double alpha) : 
     delta(delta), deltaUp(deltaUp), deltaDown(deltaDown), dStar(dStar), alpha(alpha)
 {
     type = -1;
-    extreme = reference = price.elems.mid;
+    extreme = reference = price.mid;
     initalized = true;
     alphaWeight = exp(-2.0/(alpha + 1.0));
     computeH1H2exp(dStar);
@@ -63,25 +63,25 @@ double LocalLiquidity::CumNorm(double x)
     return n;
 }
 
-int LocalLiquidity::run(PriceFeedData price){
+int LocalLiquidity::run(PriceFeedData::Price price){
     if( &price == NULL )
         return 0;
     
     if( !initalized ){
         type = -1; initalized = true;
-        extreme = reference = price.elems.mid;
+        extreme = reference = price.mid;
         return 0;
     }
     
     if( type == -1 ){
-        if( log(price.elems.bid/extreme) >= deltaUp ){
+        if( log(price.bid/extreme) >= deltaUp ){
             type = 1;
-            extreme = price.elems.ask;
-            reference = price.elems.ask;
+            extreme = price.ask;
+            reference = price.ask;
             return 1;
         }
-        if( price.elems.ask < extreme ){
-            extreme = price.elems.ask;
+        if( price.ask < extreme ){
+            extreme = price.ask;
         }
         if( log(reference/extreme) >= dStar ){
             reference = extreme;
@@ -89,14 +89,14 @@ int LocalLiquidity::run(PriceFeedData price){
         }
     }
     else if( type == 1 ){
-        if( log(price.elems.ask/extreme) <= -deltaDown ){
+        if( log(price.ask/extreme) <= -deltaDown ){
             type = -1;
-            extreme = price.elems.bid; 
-            reference = price.elems.bid;
+            extreme = price.bid; 
+            reference = price.bid;
             return -1;
         }
-        if( price.elems.bid > extreme ){
-            extreme = price.elems.bid; 
+        if( price.bid > extreme ){
+            extreme = price.bid; 
         }
         if( log(reference/extreme) <= -dStar ){
             reference = extreme;
@@ -106,7 +106,7 @@ int LocalLiquidity::run(PriceFeedData price){
     return 0;
 }
 
-bool LocalLiquidity::computation(PriceFeedData price){
+bool LocalLiquidity::computation(PriceFeedData::Price price){
     if( &price == NULL )
         return false;
     

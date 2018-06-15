@@ -17,7 +17,7 @@ public:
     NbDcCounter();
     NbDcCounter(double delta, long timeWindow);
     
-    bool run(PriceFeedData price);
+    bool run(PriceFeedData::Price price);
 };
 
 #endif
