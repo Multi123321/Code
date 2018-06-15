@@ -1,17 +1,36 @@
-	/* -- Price feed -- */
+import java.util.*;
+/* -- Price feed -- */
 	// Simple
 	public class PriceFeedData{
-		// TODO Implement your feed
-		Elems elems;
-		double ask;
+		LinkedList<Price> priceFeed = null;
+
 		PriceFeedData(){
-			elems = new Elems();
+			this.priceFeed = new LinkedList<>();
 		};
+
+		public void addPrice(double ask, double bid, long time) {
+			this.priceFeed.add(new Price(ask, bid, time));
+		}
 		
-		public class Elems{
-			double mid = 1.1;
-			double ask = 1.1;
-			double bid = 1.0;
-			long time = System.currentTimeMillis();
+		public class Price{
+			long   time;
+			double ask;
+			double bid;
+			double mid;
+
+			Price(double ask, double bid, long time) {
+				this.ask = ask;
+				this.bid = bid;
+				this.time = time;
+				this.mid = ask+bid/2;
+			}
+
+			public double getAsk() {
+				return this.ask;
+			}
+
+			public double getBid() {
+				return this.bid;
+			}
 		}
 	};

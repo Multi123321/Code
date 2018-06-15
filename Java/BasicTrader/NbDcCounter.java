@@ -15,15 +15,15 @@ public class NbDcCounter{
 		timeWindow = tW;
 	}
 	@SuppressWarnings("deprecation")
-	boolean run(PriceFeedData price){
+	boolean run(PriceFeedData.Price price){
 		if( Math.abs(runner.run(price)) == 1 ){
-			eventList.add(new Long(price.elems.time));
+			eventList.add(new Long(price.time));
 		}
 		
 		if( eventList.size() == 0 )
 			return true;
 		
-		while( eventList.get(0).longValue() < price.elems.time - timeWindow )
+		while( eventList.get(0).longValue() < price.time - timeWindow )
 			eventList.remove(0);
 		
 		return true;

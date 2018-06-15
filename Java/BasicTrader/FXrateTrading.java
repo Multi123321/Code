@@ -10,9 +10,10 @@ public class FXrateTrading{
 		
 		FXrateTrading(){};
 		FXrateTrading(String rate, int nbOfCoastTraders, double[] deltas){
-			currentTime = 1136073600000.0;
+			currentTime = 0;
 			oneDay = 24.0*60.0*60.0*1000.0;
 			FXrate = new String(rate);
+			printDataHeader();
 			coastTraderLong = new CoastlineTrader[nbOfCoastTraders];
 			coastTraderShort = new CoastlineTrader[nbOfCoastTraders];
 			
@@ -22,14 +23,14 @@ public class FXrateTrading{
 			}
 		};
 		
-		boolean runTradingAsymm(PriceFeedData price){
+		boolean runTradingAsymm(PriceFeedData.Price price){
 			for( int i = 0; i < coastTraderLong.length; ++i ){
 				coastTraderLong[i].runPriceAsymm(price, coastTraderShort[i].tP);
 				coastTraderShort[i].runPriceAsymm(price, coastTraderLong[i].tP);
 			}
 			
-			if( price.elems.time >= currentTime + oneDay ){
-				while( currentTime <= price.elems.time )
+			if( price.time >= currentTime + oneDay ){
+				while( currentTime <= price.time )
 					currentTime += oneDay;
 				
 				printDataAsymm(currentTime);
@@ -37,9 +38,27 @@ public class FXrateTrading{
 			return true;
 		}
 		
+		boolean printDataHeader(){
+			try{
+				FileWriter fw = null;
+				String sep = new String(System.getProperty("file.separator"));
+				String folder = new String(".." + sep + "DataAsymmLiq.dat");
+				double totalPos = 0.0, totalShort = 0.0, totalLong = 0.0; double totalPnl = 0.0; double totalPnlPerc = 0.0;  
+				fw = new FileWriter(folder, true);
+				fw.write("time, totalPnl, totalPnlPerc, totalPos, totalLong, totalShort, price\n");
+				fw.close();
+				return true;
+			}
+			catch(IOException e){
+				System.out.println("Failed opening DC thresh file! " + e.getMessage());
+				return false;
+			}
+		}
+
 		boolean printDataAsymm(double time){
 			String sep = new String(System.getProperty("file.separator"));
-			String folder = new String(sep + "home" + sep + "agolub" + sep + "workspace" + sep + "InvestmentStrategy" + sep + FXrate.toString() + "DataAsymmLiq.dat");
+			String folder = new String(".." + sep + "DataAsymmLiq.csv");
+			//String folder = new String(sep + "home" + sep + "agolub" + sep + "workspace" + sep + "InvestmentStrategy" + sep + FXrate.toString() + "DataAsymmLiq.dat");
 			FileWriter fw = null;
 			
 			try{
@@ -58,7 +77,7 @@ public class FXrateTrading{
 					totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice())/coastTraderLong[i].cashLimit*coastTraderLong[i].profitTarget
 							+ coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice())/coastTraderShort[i].cashLimit*coastTraderShort[i].profitTarget);
 				}
-				fw.append((long)time + "," + totalPnl + "," + totalPnlPerc + "," + totalPos + "," + totalLong + "," + totalShort + "," + price + "\n");
+				fw.append((long)time/1000 + "," + totalPnl + "," + totalPnlPerc + "," + totalPos + "," + totalLong + "," + totalShort + "," + price + "\n");
 				fw.close();
 			}
 			catch(IOException e){
