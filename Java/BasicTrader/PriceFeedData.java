@@ -22,7 +22,7 @@ import java.util.*;
 				this.ask = ask;
 				this.bid = bid;
 				this.time = time;
-				this.mid = ask+bid/2;
+				this.mid = (ask+bid)/2.0;
 			}
 
 			public double getAsk() {
@@ -31,6 +31,9 @@ import java.util.*;
 
 			public double getBid() {
 				return this.bid;
+			}
+			public double getMid() {
+				return this.mid;
 			}
 		}
 	};

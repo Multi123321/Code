@@ -42,9 +42,9 @@ public class FXrateTrading{
 			try{
 				FileWriter fw = null;
 				String sep = new String(System.getProperty("file.separator"));
-				String folder = new String(".." + sep + "DataAsymmLiq.dat");
+				String folder = new String(".." + sep + "DataAsymmLiq.csv");
 				double totalPos = 0.0, totalShort = 0.0, totalLong = 0.0; double totalPnl = 0.0; double totalPnlPerc = 0.0;  
-				fw = new FileWriter(folder, true);
+				fw = new FileWriter(folder, false);
 				fw.write("time, totalPnl, totalPnlPerc, totalPos, totalLong, totalShort, price\n");
 				fw.close();
 				return true;
@@ -77,7 +77,7 @@ public class FXrateTrading{
 					totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice())/coastTraderLong[i].cashLimit*coastTraderLong[i].profitTarget
 							+ coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice())/coastTraderShort[i].cashLimit*coastTraderShort[i].profitTarget);
 				}
-				fw.append((long)time/1000 + "," + totalPnl + "," + totalPnlPerc + "," + totalPos + "," + totalLong + "," + totalShort + "," + price + "\n");
+				fw.append(((((long)time/3600000)/24)+25569)+ "," + totalPnl + "," + totalPnlPerc + "," + totalPos + "," + totalLong + "," + totalShort + "," + price + "\n");
 				fw.close();
 			}
 			catch(IOException e){

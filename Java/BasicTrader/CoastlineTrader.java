@@ -101,6 +101,8 @@ public class CoastlineTrader{
 				initalized = true;
 			}
 			
+			lastPrice = price.getMid();
+
 			if( !liquidity.computation(price) ){
 				System.out.println("Didn't compute liquidity!");
 			}
