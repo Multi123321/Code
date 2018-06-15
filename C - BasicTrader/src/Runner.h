@@ -29,11 +29,11 @@ public:
     std::string fileName;
 
     Runner();
-    Runner(double threshUp, double threshDown, PriceFeedData price, std::string file, double dStarUp, double dStarDown);
+    Runner(double threshUp, double threshDown, PriceFeedData::Price price, std::string file, double dStarUp, double dStarDown);
     Runner(double threshUp, double threshDown, double price, std::string file, double dStarUp, double dStarDown);
     Runner(double threshUp, double threshDown, std::string file, double dStarUp, double dStarDown);
 
-    int run(PriceFeedData price);
+    int run(PriceFeedData::Price price);
     int run(double price);
 
 

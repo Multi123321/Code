@@ -15,12 +15,14 @@ private:
     string FXrate;
     Liquidity liquidity;
     double currentTime, oneDay;
+
+    bool printDataHeader();
 public:
     
     FXrateTrading();
     FXrateTrading(string rate, int nbOfCoastTraders, double deltas[]);
 
-    bool runTradingAsymm(PriceFeedData price);
+    bool runTradingAsymm(PriceFeedData::Price price);
     bool printDataAsymm(double time);
 };
 

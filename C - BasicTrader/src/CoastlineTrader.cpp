@@ -21,20 +21,26 @@ CoastlineTrader::CoastlineTrader(double dOriginal, double dUp, double dDown, dou
     fxRate = FxRate;
 }
 
-double CoastlineTrader::computePnl(PriceFeedData price)
+double CoastlineTrader::computePnl(PriceFeedData::Price price)
 {
-    double profitLoss = 0;
+    double profitLoss = 0.0;
+    double pricE = (tP > 0.0 ? price.bid : price.ask);
     for (int i = 0; i  < sizes.size(); i++) 
     {
-        profitLoss += sizes[i]*(price.elems.bid-prices[i]);
+        profitLoss += sizes[i]*(pricE-prices[i]);
     }
     return profitLoss;
 }
 
 double CoastlineTrader::computePnlLastPrice()
 {
+    if(prices.size() == 0)
+    {
+        return 0.0;
+    }
+    
     double lastPrice = *(prices.end());
-    double profitLoss = 0;
+    double profitLoss = 0.0;
     for (int i = 0; i  < sizes.size(); i++) 
     {
         profitLoss += sizes[i]*(lastPrice-prices[i]);
@@ -42,26 +48,49 @@ double CoastlineTrader::computePnlLastPrice()
     return profitLoss;
 }
 
-double CoastlineTrader::getPercPnl(PriceFeedData price)
+double CoastlineTrader::getPercPnl(PriceFeedData::Price price)
 {
-    // TODO:
-    // Percentage PnL
-    return 0.0;
+    double pricE = (tP > 0.0 ? price.bid : price.ask);
+    double percentage = 0.0;
+
+    for (int i = 0; i  < sizes.size(); i++) 
+    {
+    	double absProfitLoss = pricE-prices[i];
+    	percentage += (absProfitLoss / prices[i]) * sizes[i];
+    }
+    return percentage;
 }
 
-bool CoastlineTrader::tryToClose(PriceFeedData price)
+bool CoastlineTrader::tryToClose(PriceFeedData::Price price)
 {
-    return ((computePnl(price)+tempPnl) >= profitTarget);
+    if ((tempPnl + computePnl(price))/cashLimit >= 1) 
+    {
+    	double pricE = (tP > 0.0 ? price.bid : price.ask);
+    	double addPnl = 0;
+    	for( int i = 0; i < prices.size(); ++i )
+        {
+    		addPnl = (pricE - prices[i])*sizes[i];
+    		tempPnl += addPnl;
+    		tP -= sizes[i];
+    		sizes.erase(sizes.begin() + i); prices.erase(sizes.begin() + i);
+    		if (i > 0) increaseLong += -1.0;
+    	}
+    	pnl += tempPnl;
+    	pnlPerc += (tempPnl)/cashLimit * profitTarget;
+    	tempPnl = 0;
+    	return true;
+    }
+    return false;
 }
 
 bool CoastlineTrader::assignCashTarget()
 {
-    // TODO:
-    // Compute cash value corresponding to percentage PnL 
+    cashLimit = lastPrice * profitTarget;
+
     return true;
 }
 
-bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
+bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeInv)
 {
     if( !initalized ){
         runner = new Runner(deltaUp, deltaDown, price, fxRate, deltaUp, deltaDown);
@@ -75,6 +104,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
         liquidity = new LocalLiquidity(deltaOriginal, deltaUp, deltaDown, price, deltaOriginal*2.525729, 50.0);
         initalized = true;
     }
+
+    lastPrice = price.getMid();
     
     if( !liquidity->computation(price) ){
         cout << "Didn't compute liquidity!";
@@ -119,7 +150,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
                 tP += sizeToAdd;
                 sizes.push_front(sizeToAdd);
                 
-                prices.push_front(sign == 1 ? price.elems.ask : price.elems.bid);
+                prices.push_front(sign == 1 ? price.ask : price.bid);
                 assignCashTarget();
                 cout << "Open long";
                 
@@ -135,12 +166,12 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
                 tP += sizeToAdd;						
                 sizes.push_front(sizeToAdd);
                 
-                prices.push_front(sign == 1 ? price.elems.ask : price.elems.bid);
+                prices.push_front(sign == 1 ? price.ask : price.bid);
                 cout << "Cascade";
             }
         }
         else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
-            double pricE = (tP > 0.0 ? price.elems.bid : price.elems.ask);
+            double pricE = (tP > 0.0 ? price.bid : price.ask);
             
             for( int i = 1; i < prices.size(); ++i ){
                 double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));
@@ -189,7 +220,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
                 tP += sizeToAdd;
                 sizes.push_front(sizeToAdd);
                 
-                prices.push_front(sign == 1 ? price.elems.bid : price.elems.ask);
+                prices.push_front(sign == 1 ? price.bid : price.ask);
                 cout << "Open short";
                 assignCashTarget();
             }else if( tP < 0.0 ){
@@ -203,12 +234,12 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData price, double oppositeInv)
                 tP += sizeToAdd;
                 sizes.push_front(sizeToAdd);
                 increaseShort += 1.0;
-                prices.push_front(sign == 1 ? price.elems.bid : price.elems.ask);
+                prices.push_front(sign == 1 ? price.bid : price.ask);
                 cout << "Cascade";
             }
         }
         else if( event < 0.0 && tP < 0.0 ){
-            double pricE = (tP > 0.0 ? price.elems.bid : price.elems.ask);
+            double pricE = (tP > 0.0 ? price.bid : price.ask);
             
             for( int i = 1; i < prices.size(); ++i ){
                 double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));

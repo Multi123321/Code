@@ -40,21 +40,21 @@ public:
         string fileName;
 
         Runner();
-        Runner(double threshUp, double threshDown, PriceFeedData price, string file);
+        Runner(double threshUp, double threshDown, PriceFeedData::Price price, string file);
         Runner(double threshUp, double threshDown, double price, string file);
         Runner(double threshUp, double threshDown, string file);
 
-        int run(PriceFeedData price);
+        int run(PriceFeedData::Price price);
         int run(double price);
     };
 
     vector<Runner> runner = vector<Runner>(0);
 
     Liquidity();
-    Liquidity(PriceFeedData price, double delta1, double delta2, int lgt);
+    Liquidity(PriceFeedData::Price price, double delta1, double delta2, int lgt);
 
     void getH1nH2();
-    bool Trigger(PriceFeedData price);
+    bool Trigger(PriceFeedData::Price price);
     double getProbs(int i);
     bool computeLiquidity(long deltaT);
 };
