@@ -10,6 +10,7 @@ SET( SRCS
    PriceFeedData.cpp
    Prices.cpp
    Runner.cpp
+   CSVReader.cpp
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.txt ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config.txt COPYONLY)

@@ -4,6 +4,7 @@
 
 #include "PriceFeedData.h"
 #include "FXrateTrading.h"
+#include "CSVReader.h"
 
 using namespace std;
 using namespace config;
@@ -37,9 +38,9 @@ int main(int argc, const char *argv[])
     }
     
     // Run
-    PriceFeedData p = PriceFeedData();
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
+        PriceFeedData p = *(CSVReader::readExchangeFromFile("EUR_USD.csv"));
         for (PriceFeedData::Price* price : p.priceFeed)
         {
             trading[i].runTradingAsymm(*price);

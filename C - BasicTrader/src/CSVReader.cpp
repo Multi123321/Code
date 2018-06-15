@@ -1,29 +1,39 @@
-#include <string>
-#include <deque>
-#include <iostream>
-#include "helper/UsefullFunctions.h"
-#include "helper/ConfigManager.h"
-#include "PriceFeedData.h"
+// #include "CSVReader.h"
 
-using namespace std;
+// #include "helper/UsefullFunctions.h"
+// #include "helper/ConfigManager.h"
 
-static PriceFeedData readExchangeFromFile(string file) {
-    string csvFile = file;
-    string line;
-    string thisVal;
-    string cvsSplitBy = ";";
-    PriceFeedData prices = new PriceFeedData();
-    ifstream inputFile = functions::openInputFile(configValues["exchangeInputDir"],  file);
+// #include <vector>
+// #include <string>
+// #include <deque>
+// #include <stdlib.h>
+// #include <iostream>
+// #include "PriceFeedData.h"
 
-    istream::getline(inputFile, line);
+// using namespace std;
+// using namespace config;
 
-    while (inputFile.getline(line, 1000, '\n') {
-        vector<string> splitLine;
-        while(line.getline(thisVal, 1000,',')) {
-            values.emplace_back(thisVal);
-        }
-        prices.addPrice(splitLine[2]+0.0001, splitLine[2]-0.0001, splitLine[1]*1000); 
-    }
-    inputFile.close()
-    return prices;
-}
+// static PriceFeedData* CSVReader::readExchangeFromFile(string filepath) 
+// {
+//     string csvFile = filepath;
+//     string line;
+//     string thisVal;
+//     string cvsSplitBy = ";";
+//     PriceFeedData* prices = new PriceFeedData();
+//     ifstream inputFile = functions::openInputFile(configValues["exchangeInputDir"],  filepath);
+
+//     std::getline(inputFile, line);
+
+//     while (std::getline(inputFile, line, '\n'))
+//     {
+//         stringstream lineStream(line);
+//         vector<string> splitLine;
+//         while(getline(lineStream, thisVal,',')) 
+//         {
+//             splitLine.emplace_back(thisVal);
+//         }
+//         prices->addPrice(atof(splitLine[2].c_str())+0.0001, atof(splitLine[2].c_str())-0.0001, atof(splitLine[1].c_str())*1000); 
+//     }
+//     inputFile.close();
+//     return prices;
+// }
