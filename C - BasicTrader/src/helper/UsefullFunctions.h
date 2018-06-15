@@ -10,12 +10,12 @@ namespace functions
 {
     using namespace std;
 
-    string binDir;
+    static string binDir;
 
 
-    ofstream openOutputFile(string path, string fileName)
+    static ofstream openOutputFile(string path, string fileName, std::ios_base::openmode mode = std::ofstream::out)
     {
-        ofstream result(binDir + "/" + path + "/" + fileName);
+        ofstream result(binDir + "/" + path + "/" + fileName, mode);
         if(!result.good())
         {
             cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
@@ -25,7 +25,7 @@ namespace functions
         return result;
     }
 
-    ifstream openInputFile(string path, string fileName)
+    static ifstream openInputFile(string path, string fileName)
     {
         ifstream result(binDir + "/" + path + "/" + fileName);
         if(!result.good())
@@ -39,7 +39,7 @@ namespace functions
 
     using std::string;
 
-    string getPathName(const string& s) {
+    static string getPathName(const string& s) {
         char sep = '/';
 #ifdef _WIN32
         sep = '\\';
@@ -54,7 +54,7 @@ namespace functions
         return("");
     }
 
-    void init(int argc, const char *argv[])
+    static void init(int argc, const char *argv[])
     {
         binDir = argv[0];
         binDir = getPathName(binDir);

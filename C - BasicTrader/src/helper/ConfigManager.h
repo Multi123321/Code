@@ -15,9 +15,9 @@ namespace config
 {
     using namespace std;
 
-    ConfigInfo configValues;
+    static ConfigInfo configValues;
 
-    void loadConfig()
+    static void loadConfig()
     {
         string line;
 
