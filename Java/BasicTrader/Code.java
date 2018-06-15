@@ -41,9 +41,12 @@ public class Code {
 		}
 		
 		// Run
-		PriceFeedData p = new PriceFeedData();
+		String sep = new String(System.getProperty("file.separator"));
 		for( int i = 0; i < length; ++i ){
-			trading[i].runTradingAsymm(p);
+			PriceFeedData priceFeed = CSVReader.readExchangeFromFile(".."+sep+".."+sep+"EUR_USD.csv");
+			for (PriceFeedData.Price price : priceFeed.priceFeed){
+				trading[i].runTradingAsymm(price);
+			}
 		}
 	}
 	

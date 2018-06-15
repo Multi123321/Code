@@ -3,8 +3,8 @@ import java.util.List;
 
 public class CoastlineTrader{
 		double tP; /* -- Total position -- */
-		List<Double> prices;
-		List<Double> sizes;
+		LinkedList<Double> prices;
+		LinkedList<Double> sizes;
 		
 		double profitTarget;
 		double pnl, tempPnl;
@@ -45,29 +45,36 @@ public class CoastlineTrader{
 			fxRate = new String(FxRate);
 		}
 		
-		double computePnl(PriceFeedData price){
-			Double profitLoss = 0;
+		double computePnl(PriceFeedData.Price price){
+			Double profitLoss = 0.0;
 			for (int i = 0; i  < sizes.size(); i++) {
-				profitLoss += sizes.get(i)*(price-prices.get(i))
+				profitLoss += sizes.get(i)*(price.getBid()-prices.get(i).doubleValue());
 			}
 			return profitLoss;
 		}
 		
 		double computePnlLastPrice(){
+			if (prices.size() == 0) return 0.0;
 			Double lastPrice = prices.getLast();
-			Double profitLoss = 0;
+			Double profitLoss = 0.0;
 			for (int i = 0; i  < sizes.size(); i++) {
-				profitLoss += sizes.get(i).doubleValue()*(lastPrice-prices.get(i).doubleValue())
+				profitLoss += sizes.get(i).doubleValue()*(lastPrice.doubleValue()-prices.get(i).doubleValue());
 			}
 			return profitLoss;
 		}
-		double getPercPnl(PriceFeedData price){
-			// TODO:
-			// Percentage PnL
-			return 0.0;
+		double getPercPnl(PriceFeedData.Price price){
+			Double profitLoss = 0.0;
+			Double buyTotal   = 0.0;
+			Double percentage = 0.0;
+			for (int i = 0; i  < sizes.size(); i++) {
+				buyTotal += sizes.get(i).doubleValue()*(prices.get(i).doubleValue());
+				profitLoss += sizes.get(i).doubleValue()*(price.getBid()-prices.get(i).doubleValue());
+			}
+			percentage = profitLoss/buyTotal;
+			return percentage;
 		}
 		
-		boolean tryToClose(PriceFeedData price){
+		boolean tryToClose(PriceFeedData.Price price){
 			return ((computePnl(price)+tempPnl) >= profitTarget);
 		}
 		
@@ -78,7 +85,7 @@ public class CoastlineTrader{
 		}
 		
 		@SuppressWarnings("deprecation")
-		boolean runPriceAsymm(PriceFeedData price, double oppositeInv){
+		boolean runPriceAsymm(PriceFeedData.Price price, double oppositeInv){
 			if( !initalized ){
 				runner = new Runner(deltaUp, deltaDown, price, fxRate, deltaUp, deltaDown);
 				
@@ -94,13 +101,15 @@ public class CoastlineTrader{
 				initalized = true;
 			}
 			
+			lastPrice = price.getMid();
+
 			if( !liquidity.computation(price) ){
 				System.out.println("Didn't compute liquidity!");
 			}
 			
 			if( tryToClose(price) ){ /* -- Try to close position -- */
-				System.out.println("Close");
-				return true;
+				//System.out.println("Close");
+				//return true;
 			}
 			
 			int event = 0;
@@ -137,7 +146,7 @@ public class CoastlineTrader{
 						tP += sizeToAdd;
 						sizes.add(new Double(sizeToAdd));
 						
-						prices.add(new Double(sign == 1 ? price.elems.ask : price.elems.bid));
+						prices.add(new Double(sign == 1 ? price.ask : price.bid));
 						assignCashTarget();
 						System.out.println("Open long");
 						
@@ -153,12 +162,12 @@ public class CoastlineTrader{
 						tP += sizeToAdd;						
 						sizes.add(new Double(sizeToAdd));
 						
-						prices.add(new Double(sign == 1 ? price.elems.ask : price.elems.bid));
+						prices.add(new Double(sign == 1 ? price.ask : price.bid));
 						System.out.println("Cascade");
 					}
 				}
 				else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
-					double pricE = (tP > 0.0 ? price.elems.bid : price.elems.ask);
+					double pricE = (tP > 0.0 ? price.bid : price.ask);
 					
 					for( int i = 1; i < prices.size(); ++i ){
 						double tempP = (tP > 0.0 ? Math.log(pricE/prices.get(i).doubleValue()) : Math.log(prices.get(i).doubleValue()/pricE));
@@ -207,7 +216,7 @@ public class CoastlineTrader{
 						tP += sizeToAdd;
 						sizes.add(new Double(sizeToAdd));
 						
-						prices.add(new Double(sign == 1 ? price.elems.bid : price.elems.ask));
+						prices.add(new Double(sign == 1 ? price.bid : price.ask));
 						System.out.println("Open short");
 						assignCashTarget();
 					}else if( tP < 0.0 ){
@@ -221,12 +230,12 @@ public class CoastlineTrader{
 						tP += sizeToAdd;
 						sizes.add(new Double(sizeToAdd));
 						increaseShort += 1.0;
-						prices.add(new Double(sign == 1 ? price.elems.bid : price.elems.ask));
+						prices.add(new Double(sign == 1 ? price.bid : price.ask));
 						System.out.println("Cascade");
 					}
 				}
 				else if( event < 0.0 && tP < 0.0 ){
-					double pricE = (tP > 0.0 ? price.elems.bid : price.elems.ask);
+					double pricE = (tP > 0.0 ? price.bid : price.ask);
 					
 					for( int i = 1; i < prices.size(); ++i ){
 						double tempP = (tP > 0.0 ? Math.log(pricE/prices.get(i).doubleValue()) : Math.log(prices.get(i).doubleValue()/pricE));

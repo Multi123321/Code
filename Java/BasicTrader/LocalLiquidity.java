@@ -18,10 +18,10 @@ public class LocalLiquidity{
 			alphaWeight = Math.exp(-2.0/(a + 1.0));
 			computeH1H2exp(dS);
 		}		
-		LocalLiquidity(double d,double dUp, double dDown, PriceFeedData price, double dS, double a){
+		LocalLiquidity(double d,double dUp, double dDown, PriceFeedData.Price price, double dS, double a){
 			deltaUp = dUp; deltaDown = dDown; delta = d;
 			type = -1;
-			extreme = reference = price.elems.mid;
+			extreme = reference = price.mid;
 			dStar = dS;
 			initalized = true;
 			alpha = a;
@@ -61,25 +61,25 @@ public class LocalLiquidity{
 			return n;
 		}
 		
-		public int run(PriceFeedData price){
+		public int run(PriceFeedData.Price price){
 			if( price == null )
 				return 0;
 			
 			if( !initalized ){
 				type = -1; initalized = true;
-				extreme = reference = price.elems.mid;
+				extreme = reference = price.mid;
 				return 0;
 			}
 			
 			if( type == -1 ){
-				if( Math.log(price.elems.bid/extreme) >= deltaUp ){
+				if( Math.log(price.bid/extreme) >= deltaUp ){
 					type = 1;
-					extreme = price.elems.ask;
-					reference = price.elems.ask;
+					extreme = price.ask;
+					reference = price.ask;
 					return 1;
 				}
-				if( price.elems.ask < extreme ){
-					extreme = price.elems.ask;
+				if( price.ask < extreme ){
+					extreme = price.ask;
 				}
 				if( Math.log(reference/extreme) >= dStar ){
 					reference = extreme;
@@ -87,14 +87,14 @@ public class LocalLiquidity{
 				}
 			}
 			else if( type == 1 ){
-				if( Math.log(price.elems.ask/extreme) <= -deltaDown ){
+				if( Math.log(price.ask/extreme) <= -deltaDown ){
 					type = -1;
-					extreme = price.elems.bid; 
-					reference = price.elems.bid;
+					extreme = price.bid;
+					reference = price.bid;
 					return -1;
 				}
-				if( price.elems.bid > extreme ){
-					extreme = price.elems.bid; 
+				if( price.bid > extreme ){
+					extreme = price.bid;
 				}
 				if( Math.log(reference/extreme) <= -dStar ){
 					reference = extreme;
@@ -104,7 +104,7 @@ public class LocalLiquidity{
 			return 0;
 		}
 		
-		public boolean computation(PriceFeedData price){
+		public boolean computation(PriceFeedData.Price price){
 			if( price == null )
 				return false;
 			

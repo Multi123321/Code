@@ -18,11 +18,11 @@
 		
 		public String fileName;
 		
-		public Runner(double threshUp, double threshDown, PriceFeedData price, String file, double dStarUp, double dStarDown){
-			prevExtreme = price.elems.mid; prevExtremeTime = price.elems.time;
-			prevDC = price.elems.mid; prevDCTime = price.elems.time;
-			extreme = price.elems.mid; extremeTime = price.elems.time;
-			reference = price.elems.mid;
+		public Runner(double threshUp, double threshDown, PriceFeedData.Price price, String file, double dStarUp, double dStarDown){
+			prevExtreme = price.mid; prevExtremeTime = price.time;
+			prevDC = price.mid; prevDCTime = price.time;
+			extreme = price.mid; extremeTime = price.time;
+			reference = price.mid;
 			
 			type = -1; deltaUp = threshUp; deltaDown = threshDown; osL = 0.0; initalized = true;
 			fileName = new String(file);
@@ -47,33 +47,33 @@
 			deltaStarUp = dStarUp; deltaStarDown = dStarDown;
 		}
 		
-		public int run(PriceFeedData price){
+		public int run(PriceFeedData.Price price){
 			if( price == null )
 				return 0;
 			
 			if( !initalized ){
 				type = -1; osL = 0.0; initalized = true;
-				prevExtreme = price.elems.mid; prevExtremeTime = price.elems.time;
-				prevDC = price.elems.mid; prevDCTime = price.elems.time;
-				extreme = price.elems.mid; extremeTime = price.elems.time;
-				reference = price.elems.mid;
+				prevExtreme = price.mid; prevExtremeTime = price.time;
+				prevDC = price.mid; prevDCTime = price.time;
+				extreme = price.mid; extremeTime = price.time;
+				reference = price.mid;
 				
 				return 0;
 			}
 			
 			if( type == -1 ){
-				if( Math.log(price.elems.bid/extreme) >= deltaUp ){
+				if( Math.log(price.bid/extreme) >= deltaUp ){
 					prevExtreme = extreme;
 					prevExtremeTime = extremeTime;
 					type = 1;
-					extreme = price.elems.ask; extremeTime = price.elems.time;
-					prevDC = price.elems.ask; prevDCTime = price.elems.time;
-					reference = price.elems.ask;		
+					extreme = price.ask; extremeTime = price.time;
+					prevDC = price.ask; prevDCTime = price.time;
+					reference = price.ask;		
 					return 1;
 				}
-				if( price.elems.ask < extreme ){
-					extreme = price.elems.ask;
-					extremeTime = price.elems.time;
+				if( price.ask < extreme ){
+					extreme = price.ask;
+					extremeTime = price.time;
 					osL = -Math.log(extreme/prevDC)/deltaDown;
 					
 					if( Math.log(extreme/reference) <= -deltaStarUp ){
@@ -84,18 +84,18 @@
 				}
 			}
 			else if( type == 1 ){
-				if( Math.log(price.elems.ask/extreme) <= -deltaDown ){
+				if( Math.log(price.ask/extreme) <= -deltaDown ){
 					prevExtreme = extreme; 
 					prevExtremeTime = extremeTime;
 					type = -1;
-					extreme = price.elems.bid; extremeTime = price.elems.time;
-					prevDC = price.elems.bid; prevDCTime = price.elems.time;
-					reference = price.elems.bid;
+					extreme = price.bid; extremeTime = price.time;
+					prevDC = price.bid; prevDCTime = price.time;
+					reference = price.bid;
 					return -1;
 				}
-				if( price.elems.bid > extreme ){
-					extreme = price.elems.bid; 
-					extremeTime = price.elems.time;
+				if( price.bid > extreme ){
+					extreme = price.bid; 
+					extremeTime = price.time;
 					osL = Math.log(extreme/prevDC)/deltaUp;
 					
 					if( Math.log(extreme/reference) >= deltaStarDown ){

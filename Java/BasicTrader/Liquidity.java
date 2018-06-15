@@ -14,9 +14,9 @@ public class Liquidity{
 		
 		public String fileName;
 		
-		public Runner(double threshUp, double threshDown, PriceFeedData price, String file){
-			prevDC = price.elems.mid; 
-			extreme = price.elems.mid; 
+		public Runner(double threshUp, double threshDown, PriceFeedData.Price price, String file){
+			prevDC = price.mid;
+			extreme = price.mid;
 			
 			type = -1; deltaUp = threshUp; deltaDown = threshDown;initalized = true;
 			fileName = new String(file);
@@ -35,38 +35,38 @@ public class Liquidity{
 			fileName = new String(file);
 		}
 		
-		public int run(PriceFeedData price){
+		public int run(PriceFeedData.Price price){
 			if( price == null )
 				return 0;
 			
 			if( !initalized ){
 				type = -1; initalized = true;
-				prevDC = price.elems.mid;
-				extreme = price.elems.mid;
+				prevDC = price.mid;
+				extreme = price.mid;
 				return 0;
 			}
 			
 			if( type == -1 ){
-				if( Math.log(price.elems.bid/extreme) >= deltaUp ){
+				if( Math.log(price.bid/extreme) >= deltaUp ){
 					type = 1;
-					extreme = price.elems.ask; 
-					prevDC = price.elems.ask;	
+					extreme = price.ask;
+					prevDC = price.ask;
 					return 1;
 				}
-				if( price.elems.ask < extreme ){
-					extreme = price.elems.ask;
+				if( price.ask < extreme ){
+					extreme = price.ask;
 					return 0;
 				}
 			}
 			else if( type == 1 ){
-				if( Math.log(price.elems.ask/extreme) <= -deltaDown ){
+				if( Math.log(price.ask/extreme) <= -deltaDown ){
 					type = -1;
-					extreme = price.elems.bid;
-					prevDC = price.elems.bid; 
+					extreme = price.bid;
+					prevDC = price.bid;
 					return -1;
 				}
-				if( price.elems.bid > extreme ){
-					extreme = price.elems.bid; 
+				if( price.bid > extreme ){
+					extreme = price.bid;
 					return 0;
 				}
 			}
@@ -122,7 +122,7 @@ public class Liquidity{
 	
 	public Liquidity(){};
 	@SuppressWarnings("deprecation")
-	public Liquidity(PriceFeedData price, double delta1, double delta2, int lgt){
+	public Liquidity(PriceFeedData.Price price, double delta1, double delta2, int lgt){
 		double prob = Math.exp(-1.0);
 		H1 = -(prob*Math.log(prob) + (1.0 - prob)*Math.log(1.0 - prob));
 		H2 = prob*Math.pow(Math.log(prob), 2.0) + (1.0 - prob)*Math.pow(Math.log(1.0 - prob), 2.0) - H1*H1;
@@ -194,7 +194,7 @@ public class Liquidity{
 	}
 	
 	@SuppressWarnings("deprecation")
-	public boolean Trigger(PriceFeedData price){
+	public boolean Trigger(PriceFeedData.Price price){
 		// -- update values -- 
 		boolean doComp = false;
 		for( int i = 0; i < runner.length; ++i ){
