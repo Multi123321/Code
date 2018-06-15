@@ -48,3 +48,15 @@ cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
+
+#vsCode
+c_cpp_properties.json
+launch.json
+
+#intellij idea
+Java.iml
+description.html
+misc.xml
+modules.xml
+project-template.xml
+workspace.xml
