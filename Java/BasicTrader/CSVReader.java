@@ -21,7 +21,7 @@ public class CSVReader{
                 // use comma as separator
                 String[] splitLine = line.split(cvsSplitBy);
 
-                prices.addPrice(Float.valueOf(splitLine[2]), Float.valueOf(splitLine[2]), Long.valueOf(splitLine[1])*1000);
+                prices.addPrice(Float.valueOf(splitLine[2])+0.0001, Float.valueOf(splitLine[2])-0.0001, Long.valueOf(splitLine[1])*1000);
             }
 
         } catch (IOException e) {

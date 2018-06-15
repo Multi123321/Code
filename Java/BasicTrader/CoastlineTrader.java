@@ -47,8 +47,9 @@ public class CoastlineTrader{
 		
 		double computePnl(PriceFeedData.Price price){
 			Double profitLoss = 0.0;
+			double pricE = (tP > 0.0 ? price.bid : price.ask);
 			for (int i = 0; i  < sizes.size(); i++) {
-				profitLoss += sizes.get(i)*(price.getBid()-prices.get(i).doubleValue());
+				profitLoss += sizes.get(i)*(pricE-prices.get(i).doubleValue());
 			}
 			return profitLoss;
 		}
@@ -56,31 +57,44 @@ public class CoastlineTrader{
 		double computePnlLastPrice(){
 			if (prices.size() == 0) return 0.0;
 			Double lastPrice = prices.getLast();
-			Double profitLoss = 0.0;
+			double profitLoss = 0.0;
 			for (int i = 0; i  < sizes.size(); i++) {
 				profitLoss += sizes.get(i).doubleValue()*(lastPrice.doubleValue()-prices.get(i).doubleValue());
 			}
 			return profitLoss;
 		}
+
 		double getPercPnl(PriceFeedData.Price price){
-			Double profitLoss = 0.0;
-			Double buyTotal   = 0.0;
-			Double percentage = 0.0;
+			double percentage = 0.0;
+			double pricE = (tP > 0.0 ? price.bid : price.ask);
 			for (int i = 0; i  < sizes.size(); i++) {
-				buyTotal += sizes.get(i).doubleValue()*(prices.get(i).doubleValue());
-				profitLoss += sizes.get(i).doubleValue()*(price.getBid()-prices.get(i).doubleValue());
+				double absProfitLoss = pricE-prices.get(i).doubleValue();
+				percentage += (absProfitLoss / prices.get(i).doubleValue()) * sizes.get(i).doubleValue();
 			}
-			percentage = profitLoss/buyTotal;
 			return percentage;
 		}
 		
 		boolean tryToClose(PriceFeedData.Price price){
-			return ((computePnl(price)+tempPnl) >= profitTarget);
+			if ((tempPnl + computePnl(price))/cashLimit >= 1) {
+				double pricE = (tP > 0.0 ? price.bid : price.ask);
+				double addPnl = 0;
+				for( int i = 0; i < prices.size(); ++i ){
+					addPnl = (pricE - prices.get(i).doubleValue())*sizes.get(i).doubleValue();
+					tempPnl += addPnl;
+					tP -= sizes.get(i).doubleValue();
+					sizes.remove(i); prices.remove(i);
+					if (i > 0) increaseLong += -1.0;
+				}
+				pnl += tempPnl;
+				pnlPerc += (tempPnl)/cashLimit * profitTarget;
+				tempPnl = 0;
+				return true;
+			}
+			return false;
 		}
 		
 		boolean assignCashTarget(){
-			// TODO:
-			// Compute cash value corresponding to percentage PnL 
+			cashLimit = lastPrice*profitTarget;
 			return true;
 		}
 		
@@ -101,15 +115,17 @@ public class CoastlineTrader{
 				initalized = true;
 			}
 			
-			lastPrice = price.getMid();
+			lastPrice = (tP > 0.0 ? price.bid : price.ask);
 
 			if( !liquidity.computation(price) ){
 				System.out.println("Didn't compute liquidity!");
 			}
 			
 			if( tryToClose(price) ){ /* -- Try to close position -- */
-				//System.out.println("Close");
-				//return true;
+				System.out.println("Close");
+				//some prints
+				//System.out.println("longShort: " + longShort + "; tP: " + tP + "; pnl: " + pnl + "; pnlPerc: " +  pnlPerc+ "; tempPnl: " + tempPnl + "; unrealized: " + computePnlLastPrice()  + "; cashLimit: " + cashLimit + "; price: " +  lastPrice + "\n");
+				return true;
 			}
 			
 			int event = 0;
@@ -256,6 +272,10 @@ public class CoastlineTrader{
 			else{
 				System.out.println("Should never happen! " + longShort);
 			}
+
+			//some prints
+			//System.out.println("longShort: " + longShort + "; tP: " + tP + "; pnl: " + pnl + "; pnlPerc: " +  pnlPerc+ "; tempPnl: " + tempPnl + "; unrealized: " + computePnlLastPrice()  + "; cashLimit: " + cashLimit + "; price: " +  lastPrice + "\n");
+
 			return true;
 		}
 	};

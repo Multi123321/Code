@@ -58,7 +58,6 @@ public class FXrateTrading{
 		boolean printDataAsymm(double time){
 			String sep = new String(System.getProperty("file.separator"));
 			String folder = new String(".." + sep + "DataAsymmLiq.csv");
-			//String folder = new String(sep + "home" + sep + "agolub" + sep + "workspace" + sep + "InvestmentStrategy" + sep + FXrate.toString() + "DataAsymmLiq.dat");
 			FileWriter fw = null;
 			
 			try{
@@ -69,13 +68,13 @@ public class FXrateTrading{
 					if( i == 0 ){
 						price = coastTraderLong[i].lastPrice;
 					}
-					totalLong += coastTraderLong[i].tP;
+					totalLong  += coastTraderLong[i].tP;
 					totalShort += coastTraderShort[i].tP;
-					totalPos += (coastTraderLong[i].tP + coastTraderShort[i].tP);
-					totalPnl += (coastTraderLong[i].pnl + coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice()
-							+ coastTraderShort[i].pnl + coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice());
+					totalPos   += (coastTraderLong[i].tP + coastTraderShort[i].tP);
+					totalPnl   += (coastTraderLong[i].pnl + coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice()
+							   + coastTraderShort[i].pnl + coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice());
 					totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice())/coastTraderLong[i].cashLimit*coastTraderLong[i].profitTarget
-							+ coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice())/coastTraderShort[i].cashLimit*coastTraderShort[i].profitTarget);
+							     + coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice())/coastTraderShort[i].cashLimit*coastTraderShort[i].profitTarget);
 				}
 				fw.append(((((long)time/3600000)/24)+25569)+ "," + totalPnl + "," + totalPnlPerc + "," + totalPos + "," + totalLong + "," + totalShort + "," + price + "\n");
 				fw.close();
