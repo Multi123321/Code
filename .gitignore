@@ -35,6 +35,9 @@
 *.out
 *.app
 
+# Mac Files
+.DS_Store
+
 # CMake
 CMakeCache.txt
 CMakeFiles
