@@ -4,7 +4,6 @@ SET( SRCS
    CoastlineTrader.cpp
    FXrateTrading.cpp
    HelpClass.cpp
-   Liquidity.cpp
    LocalLiquidity.cpp
    NbDcCounter.cpp
    PriceFeedData.cpp

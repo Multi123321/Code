@@ -4,7 +4,6 @@
 #include "CoastlineTrader.h"
 #include <string>
 #include <vector>
-#include "Liquidity.h"
 
 class FXrateTrading
 {
@@ -13,7 +12,6 @@ private:
     vector<CoastlineTrader*> coastTraderShort;
     
     string FXrate;
-    Liquidity liquidity;
     double currentTime, oneDay;
 
     bool printDataHeader();
