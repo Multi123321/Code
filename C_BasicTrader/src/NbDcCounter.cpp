@@ -5,8 +5,8 @@
 NbDcCounter::NbDcCounter()
 {}
 
-NbDcCounter::NbDcCounter(double delta, long timeWindow) :
-    delta(delta), timeWindow(timeWindow)
+NbDcCounter::NbDcCounter(double deltaArg, long timeWindowArg) :
+    delta(deltaArg), timeWindow(timeWindowArg)
 {
     runner = Runner(delta, delta, "events", delta, delta);
 }

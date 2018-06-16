@@ -56,7 +56,7 @@ Liquidity::Liquidity(PriceFeedData::Price price, double delta1, double delta2, i
     runner.resize(lgt);
     prevState.resize(lgt);
     
-    for( int i = 0; i < runner.size(); ++i )
+    for( uint i = 0; i < runner.size(); ++i )
     {
         // TODO maybe a new is necessary
         runner[i] = Runner(0.025/100.0 + 0.05/100.0*(double)i, 0.025/100.0 + 0.05/100.0*(double)i, price, "JustFake");
@@ -89,7 +89,7 @@ void Liquidity::getH1nH2()
     alpha = 2.0/(100.0 + 1.0);
     alphaWeight = exp(-alpha);
     runner = vector<Runner>(runner.size());
-    for( int i = 0; i < runner.size(); ++i )
+    for( uint i = 0; i < runner.size(); ++i )
     {
         // TODO maybe a new is necessary here
         runner[i] = Runner(0.025/100.0 + 0.05/100.0 * (double)i, 0.025/100.0 + 0.05/100.0*(double)i, price, "JustFake");
@@ -107,7 +107,7 @@ void Liquidity::getH1nH2()
     for( int i = 0; i < 100000000; ++i )
     {
         price += sigma * dt * distribution(generator);
-        for( int j= 0; j < runner.size(); ++j )
+        for( uint j= 0; j < runner.size(); ++j )
         {
             if( abs(runner[j].run(price)) == 1 ) // this is OK for simulated prices
             { 
@@ -126,7 +126,7 @@ bool Liquidity::Trigger(PriceFeedData::Price price)
 {
     // -- update values -- 
     bool doComp = false;
-    for( int i = 0; i < runner.size(); ++i )
+    for( uint i = 0; i < runner.size(); ++i )
     {
         int value = runner[i].run(price);
         if( abs(value) == 1 )
@@ -162,7 +162,7 @@ bool Liquidity::Trigger(PriceFeedData::Price price)
 double Liquidity::getProbs(int i)
 {
     	int where = -1;
-		for( int j = 1; j < prevState.size(); ++j )
+		for( uint j = 1; j < prevState.size(); ++j )
         {
 			if( prevState[j] != prevState[0] )
             {

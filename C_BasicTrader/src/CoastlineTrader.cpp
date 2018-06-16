@@ -25,7 +25,7 @@ double CoastlineTrader::computePnl(PriceFeedData::Price price)
 {
     double profitLoss = 0.0;
     double pricE = (tP > 0.0 ? price.bid : price.ask);
-    for (int i = 0; i  < sizes.size(); i++) 
+    for (uint i = 0; i  < sizes.size(); i++) 
     {
         profitLoss += sizes[i]*(pricE-prices[i]);
     }
@@ -39,9 +39,8 @@ double CoastlineTrader::computePnlLastPrice()
         return 0.0;
     }
     
-    double lastPrice = *(prices.end());
     double profitLoss = 0.0;
-    for (int i = 0; i  < sizes.size(); i++) 
+    for (uint i = 0; i  < sizes.size(); i++) 
     {
         profitLoss += sizes[i]*(lastPrice-prices[i]);
     }
@@ -53,7 +52,7 @@ double CoastlineTrader::getPercPnl(PriceFeedData::Price price)
     double pricE = (tP > 0.0 ? price.bid : price.ask);
     double percentage = 0.0;
 
-    for (int i = 0; i  < sizes.size(); i++) 
+    for (uint i = 0; i  < sizes.size(); i++) 
     {
     	double absProfitLoss = pricE-prices[i];
     	percentage += (absProfitLoss / prices[i]) * sizes[i];
@@ -67,7 +66,7 @@ bool CoastlineTrader::tryToClose(PriceFeedData::Price price)
     {
     	double pricE = (tP > 0.0 ? price.bid : price.ask);
     	double addPnl = 0;
-    	for( int i = 0; i < prices.size(); ++i )
+    	for( uint i = 0; i < prices.size(); ++i )
         {
     		addPnl = (pricE - prices[i])*sizes[i];
     		tempPnl += addPnl;
@@ -173,7 +172,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
             double pricE = (tP > 0.0 ? price.bid : price.ask);
             
-            for( int i = 1; i < prices.size(); ++i ){
+            for( uint i = 1; i < prices.size(); ++i ){
                 double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
                     double addPnl = (pricE - prices[i])*sizes[i];
@@ -241,7 +240,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         else if( event < 0.0 && tP < 0.0 ){
             double pricE = (tP > 0.0 ? price.bid : price.ask);
             
-            for( int i = 1; i < prices.size(); ++i ){
+            for( uint i = 1; i < prices.size(); ++i ){
                 double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
                     double addPnl = (pricE - prices[i])*sizes[i];

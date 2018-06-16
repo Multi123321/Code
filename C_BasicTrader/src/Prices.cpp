@@ -3,8 +3,8 @@
 Prices::Prices()
 {}
 
-Prices::Prices(double bid, double ask) : 
-    bid(bid), ask(ask)
+Prices::Prices(double bidArg, double askArg) : 
+    bid(bidArg), ask(askArg)
 {}
 
 Prices::Prices(const Prices& p) :
@@ -21,14 +21,14 @@ double Prices::getBid()
     return bid;
 }
 
-void Prices::setAsk(double ask)
+void Prices::setAsk(double askArg)
 {
-    this->ask = ask;
+    this->ask = askArg;
 }
 
-void Prices::setBid(double bid)
+void Prices::setBid(double bidArg)
 {
-    this->bid = bid;
+    this->bid = bidArg;
 }
 
 double Prices::getSpread()

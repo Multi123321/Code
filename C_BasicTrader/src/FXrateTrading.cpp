@@ -24,7 +24,7 @@ FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
     coastTraderLong.resize(nbOfCoastTraders);
     coastTraderShort.resize(nbOfCoastTraders);
     
-    for( int i = 0; i < coastTraderLong.size(); ++i )
+    for( uint i = 0; i < coastTraderLong.size(); ++i )
     {
         coastTraderLong[i] = new CoastlineTrader(deltas[i], deltas[i], deltas[i], deltas[i], rate, 1);
         coastTraderShort[i] =  new CoastlineTrader(deltas[i], deltas[i], deltas[i], deltas[i], rate, -1);
@@ -33,7 +33,7 @@ FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
 
 bool FXrateTrading::runTradingAsymm(PriceFeedData::Price price)
 {
-    for( int i = 0; i < coastTraderLong.size(); ++i )
+    for( uint i = 0; i < coastTraderLong.size(); ++i )
     {
         coastTraderLong[i]->runPriceAsymm(price, coastTraderShort[i]->tP);
         coastTraderShort[i]->runPriceAsymm(price, coastTraderLong[i]->tP);
@@ -70,7 +70,7 @@ bool FXrateTrading::printDataAsymm(double time)
     double totalPnl = 0.0; 
     double totalPnlPerc = 0.0;  
     double price = -1.0;
-    for( int i = 0; i < coastTraderLong.size(); ++i )
+    for( uint i = 0; i < coastTraderLong.size(); ++i )
     {
         if( i == 0 )
         {

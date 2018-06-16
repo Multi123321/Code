@@ -10,8 +10,8 @@ void PriceFeedData::addPrice(double ask, double bid, long time)
 }
 
 
-PriceFeedData::Price::Price(double ask, double bid, long time) :
-    ask(ask), bid(bid), time(time)
+PriceFeedData::Price::Price(double askArg, double bidArg, long timeArg) :
+    ask(askArg), bid(bidArg), time(timeArg)
 {
     mid = (ask + bid) / 2;
 }

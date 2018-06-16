@@ -8,8 +8,8 @@ using namespace std;
 LocalLiquidity::LocalLiquidity()
 {}
 
-LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, double dStar, double alpha) : 
-    delta(delta), deltaUp(deltaUp), deltaDown(deltaDown), dStar(dStar), alpha(alpha)
+LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaDownArg, double dStarArg, double alphaArg) : 
+    delta(deltaArg), deltaUp(deltaUpArg), deltaDown(deltaDownArg), dStar(dStarArg), alpha(alphaArg)
 {
     type = -1; 
     initalized = false;
@@ -17,11 +17,11 @@ LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, d
     computeH1H2exp(dStar);
 } 
 
-LocalLiquidity::LocalLiquidity(double delta, double deltaUp, double deltaDown, PriceFeedData::Price price, double dStar, double alpha) : 
-    delta(delta), deltaUp(deltaUp), deltaDown(deltaDown), dStar(dStar), alpha(alpha)
+LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaDownArg, PriceFeedData::Price priceArg, double dStarArg, double alphaArg) : 
+    delta(deltaArg), deltaUp(deltaUpArg), deltaDown(deltaDownArg), dStar(dStarArg), alpha(alphaArg)
 {
     type = -1;
-    extreme = reference = price.mid;
+    extreme = reference = priceArg.mid;
     initalized = true;
     alphaWeight = exp(-2.0/(alpha + 1.0));
     computeH1H2exp(dStar);
