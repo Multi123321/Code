@@ -24,7 +24,7 @@ public:
             long getTime();
     };
 
-    std::list<Price*> priceFeed;
+    std::list<Price> priceFeed;
     
     void addPrice(double ask, double bid, long time);
     

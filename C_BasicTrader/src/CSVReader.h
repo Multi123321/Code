@@ -17,30 +17,29 @@ using namespace config;
 class CSVReader
 {    
 public:
-    static PriceFeedData* readExchangeFromFile(std::string filepath)
+    static int readExchangeFromFile(PriceFeedData &prices, string filepath)
     {
         string csvFile = filepath;
         string line;
         string thisVal;
-        string cvsSplitBy = ";";
-        PriceFeedData* prices = new PriceFeedData();
+        char cvsSplitBy = ';';
         ifstream inputFile;
         functions::openInputFile(inputFile, configValues["exchangeInputDir"],  filepath);
 
-        std::getline(inputFile, line);
+        std::getline(inputFile, line, '\n');
 
         while (std::getline(inputFile, line, '\n'))
         {
             stringstream lineStream(line);
             vector<string> splitLine;
-            while(getline(lineStream, thisVal,',')) 
+            while(getline(lineStream, thisVal,cvsSplitBy)) 
             {
                 splitLine.emplace_back(thisVal);
             }
-            prices->addPrice(atof(splitLine[2].c_str())+0.0001, atof(splitLine[2].c_str())-0.0001, atof(splitLine[1].c_str())*1000); 
+            prices.addPrice(atof(splitLine[2].c_str())+0.0001, atof(splitLine[2].c_str())-0.0001, atof(splitLine[1].c_str())*1000); 
         }
         inputFile.close();
-        return prices;
+        return true;
     }
 };
 

@@ -12,7 +12,6 @@ namespace functions
 
     static string binDir;
 
-
     inline static int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode = std::ofstream::out)
     {
         outputFileStream.open(binDir + "/" + path + "/" + fileName, mode);

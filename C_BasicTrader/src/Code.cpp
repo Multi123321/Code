@@ -9,22 +9,14 @@
 using namespace std;
 using namespace config;
 
-string ingridPath, outgridPath;
-
 int main(int argc, const char *argv[]) 
 {
-    // if(argc != 3)
-    // {
-    //     cout << "Aufrufen mit: " << argv[0] << " INGRID.vtk OUTGRID.vtk\n";
-    //     exit(EXIT_FAILURE);
-    // }
-
     functions::init(argc, argv);
-    config::loadConfig();
+    loadConfig();
 
     // TODO Currency configuration
     const int numberOfCurrencies = 1;
-    string ccyList[numberOfCurrencies] = {"AUD_CAD"};/* , "AUD_JPY", "AUD_NZD", "AUD_USD", "CAD_JPY", "CHF_JPY", "EUR_AUD", "EUR_CAD", "EUR_CHF",
+    string ccyList[numberOfCurrencies] = {"EUR_USD"};/* , "AUD_JPY", "AUD_NZD", "AUD_USD", "CAD_JPY", "CHF_JPY", "EUR_AUD", "EUR_CAD", "EUR_CHF",
             "EUR_GBP", "EUR_JPY", "EUR_NZD", "EUR_USD", "GBP_AUD", "GBP_CAD", "GBP_CHF", "GBP_JPY", "GBP_USD", "NZD_CAD",
             "NZD_JPY", "NZD_USD", "USD_CAD", "USD_CHF", "USD_JPY"}; */
     
@@ -40,10 +32,11 @@ int main(int argc, const char *argv[])
     // Run
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
-        PriceFeedData p = *(CSVReader::readExchangeFromFile("EUR_USD.csv"));
-        for (PriceFeedData::Price* price : p.priceFeed)
+        PriceFeedData prices;
+        CSVReader::readExchangeFromFile(prices, "EUR_USD.csv");
+        for (PriceFeedData::Price price : prices.priceFeed)
         {
-            trading[i].runTradingAsymm(*price);
+            trading[i].runTradingAsymm(price);
         }
     }
 }

@@ -6,7 +6,7 @@ PriceFeedData::PriceFeedData()
     
 void PriceFeedData::addPrice(double ask, double bid, long time)
 {
-    priceFeed.push_back(new Price(ask, bid, time));
+    priceFeed.push_back(Price(ask, bid, time));
 }
 
 
