@@ -27,7 +27,7 @@ int main(int argc, const char *argv[])
     double deltaS[numberOfThresholds] = {0.25/100.0, 0.5/100.0, 1.0/100.0, 1.5/100.0};
 
     PriceFeedData prices[numberOfCurrencies];
-
+    
     #pragma omp parallel for
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
@@ -45,8 +45,6 @@ int main(int argc, const char *argv[])
     #pragma omp parallel for
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
-        printf("Thread rank: %d\n", omp_get_thread_num());
-
         Timer timer;
         timer.reset();
         for (PriceFeedData::Price price : prices[i].priceFeed)
