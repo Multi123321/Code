@@ -117,9 +117,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
     }
     
     if( tryToClose(price) ){ /* -- Try to close position -- */
-        cout << "Close" << endl;
-        //some prints
-		//cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " <<  lastPrice << "\n";
+		IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " <<  lastPrice << "\n");
         IFDEBUG(cout << "Close" << endl);
         return true;
     }
@@ -273,6 +271,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         cout << "Should never happen! " << longShort << endl;
     }
     //some prints
-    //cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " <<  lastPrice << "\n";
+    IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " <<  lastPrice << "\n");
     return true;
 }

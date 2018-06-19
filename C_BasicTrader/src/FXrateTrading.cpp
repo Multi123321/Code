@@ -1,6 +1,7 @@
 #include "FXrateTrading.h"
 #include "helper/UsefullFunctions.h"
 #include "helper/ConfigManager.h"
+#include "helper/Macros.h"
 
 #include <iostream>
 #include <fstream>
@@ -42,7 +43,7 @@ bool FXrateTrading::runTradingAsymm(PriceFeedData::Price price)
         while( currentTime <= price.time )
             currentTime += oneDay;
         
-        printDataAsymm(currentTime);
+        IFDEBUG(printDataAsymm(currentTime));
     }
     return true;
 }
