@@ -9,6 +9,8 @@
 #include <string>
 #include <sstream>
 
+typedef unsigned int uint;
+
 FXrateTrading::FXrateTrading()
 {}
 

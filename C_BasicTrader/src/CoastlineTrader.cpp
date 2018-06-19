@@ -7,6 +7,8 @@
 #include <assert.h>
 #include "helper/Macros.h"
 
+typedef unsigned int uint;
+
 CoastlineTrader::CoastlineTrader()
 {}
 
