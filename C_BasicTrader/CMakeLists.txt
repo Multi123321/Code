@@ -9,8 +9,6 @@ OPTION( SPEED_MODE "enables/disables flags which result in a faster executable b
 OPTION( SHOW_OPTIMIZATION "enables/disables flags which shows optimization dumps from various optimization passes (off by default)" OFF )
 
 
-# SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wpedantic -g -Winline -DNDEBUG")
-
 IF( CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wextra -Wshadow -pedantic")
    IF( ARCHITECTURE_OPTIMIZATION )
