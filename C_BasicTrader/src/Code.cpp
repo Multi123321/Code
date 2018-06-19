@@ -18,7 +18,7 @@ int main(int argc, const char *argv[])
 
     // TODO Currency configuration
     const int numberOfCurrencies = 4;
-    string ccyList[numberOfCurrencies] = {"kurs.csv", "kurs1.csv", "kurs2.csv", "kurs3.csv"};
+    string ccyList[numberOfCurrencies] = {"kurs1.csv", "kurs2.csv", "kurs3.csv", "kurs4.csv"};
     
     FXrateTrading trading[numberOfCurrencies];
     
@@ -27,6 +27,8 @@ int main(int argc, const char *argv[])
     double deltaS[numberOfThresholds] = {0.25/100.0, 0.5/100.0, 1.0/100.0, 1.5/100.0};
 
     PriceFeedData prices[numberOfCurrencies];
+    
+    #pragma omp parallel for
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
         trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);        
@@ -43,8 +45,6 @@ int main(int argc, const char *argv[])
     #pragma omp parallel for
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
-        printf("Thread rank: %d\n", omp_get_thread_num());
-
         Timer timer;
         timer.reset();
         for (PriceFeedData::Price price : prices[i].priceFeed)
