@@ -105,6 +105,9 @@
         "ratio": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "__nullptr": "cpp",
+        "string_view": "cpp",
+        "iostream": "cpp"
     }
 }

@@ -9,4 +9,7 @@
 
 #define SQUARE(x) x * x
 
+#define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define TRACE() cout << __PRETTY_FUNCTION__ << " Line: " << __LINE__ << " in file: " << __FILENAME__ << std::endl;
+
 #endif
