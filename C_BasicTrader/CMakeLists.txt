@@ -8,8 +8,6 @@ OPTION( ENABLE_WALL "enables/disables the flag -Wall for gnu c++ compiler (on by
 OPTION( SPEED_MODE "enables/disables flags which result in a faster executable but disables debug flags (off by default)" OFF )
 OPTION( SHOW_OPTIMIZATION "enables/disables flags which shows optimization dumps from various optimization passes (off by default)" OFF )
 
-set(CMAKE_CXX_COMPILER "c++-5")
-
 IF( CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
    SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wextra -Wshadow -pedantic -fopenmp")
    IF( ARCHITECTURE_OPTIMIZATION )
