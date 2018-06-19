@@ -3,6 +3,8 @@
 #include "helper/ConfigManager.h"
 #include "helper/Timer.h"
 
+#include <omp.h>
+
 #include "PriceFeedData.h"
 #include "FXrateTrading.h"
 #include "CSVReader.h"
@@ -15,35 +17,44 @@ int main(int argc, const char *argv[])
     config::loadConfig();
 
     // TODO Currency configuration
-    const int numberOfCurrencies = 1;
-    string ccyList[numberOfCurrencies] = {"EUR_USD"};/* , "AUD_JPY", "AUD_NZD", "AUD_USD", "CAD_JPY", "CHF_JPY", "EUR_AUD", "EUR_CAD", "EUR_CHF",
-            "EUR_GBP", "EUR_JPY", "EUR_NZD", "EUR_USD", "GBP_AUD", "GBP_CAD", "GBP_CHF", "GBP_JPY", "GBP_USD", "NZD_CAD",
-            "NZD_JPY", "NZD_USD", "USD_CAD", "USD_CHF", "USD_JPY"}; */
+    const int numberOfCurrencies = 4;
+    string ccyList[numberOfCurrencies] = {"kurs.csv", "kurs1.csv", "kurs2.csv", "kurs3.csv"};
     
     FXrateTrading trading[numberOfCurrencies];
     
     // TODO Threshold configuration  (see below)
     const int numberOfThresholds = 4;
     double deltaS[numberOfThresholds] = {0.25/100.0, 0.5/100.0, 1.0/100.0, 1.5/100.0};
-    for( int i = 0; i < numberOfCurrencies; ++i ){
-        trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);
+
+    PriceFeedData prices[numberOfCurrencies];
+    for( int i = 0; i < numberOfCurrencies; ++i )
+    {
+        trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);        
+        
+        CSVReader::readExchangeFromFile(prices[i], ccyList[i]);
     }
     
     double time;
 
+
+    Timer totalTimer;
+    totalTimer.reset();
     // Run
+    #pragma omp parallel for
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
-        PriceFeedData prices;
-        CSVReader::readExchangeFromFile(prices, "kurs.csv");
+        printf("Thread rank: %d\n", omp_get_thread_num());
+
         Timer timer;
         timer.reset();
-        for (PriceFeedData::Price price : prices.priceFeed)
+        for (PriceFeedData::Price price : prices[i].priceFeed)
         {
             trading[i].runTradingAsymm(price);
         }
         time = timer.elapsed();
-        cout << time << " Seconds elapsed\n";
+        cout << ccyList[i] << " took: " << time << " Seconds" << std::endl;
     }
+
+    cout << "Total time: " << totalTimer.elapsed() << std::endl;
 }
 
