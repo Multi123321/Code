@@ -36,7 +36,7 @@ public:
             {
                 splitLine.emplace_back(thisVal);
             }
-            prices.addPrice(atof(splitLine[2].c_str())+0.0001, atof(splitLine[2].c_str())-0.0001, atof(splitLine[1].c_str())*1000); 
+            prices.addPrice(atof(splitLine[1].c_str())+0.0001, atof(splitLine[1].c_str())-0.0001, atof(splitLine[0].c_str())*1000); 
         }
         inputFile.close();
         return true;

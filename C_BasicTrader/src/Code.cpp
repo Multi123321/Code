@@ -1,6 +1,7 @@
 #include "helper/Macros.h"
 #include "helper/UsefullFunctions.h"
 #include "helper/ConfigManager.h"
+#include "helper/Timer.h"
 
 #include "PriceFeedData.h"
 #include "FXrateTrading.h"
@@ -28,15 +29,21 @@ int main(int argc, const char *argv[])
         trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);
     }
     
+    double time;
+
     // Run
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
         PriceFeedData prices;
-        CSVReader::readExchangeFromFile(prices, "EUR_USD.csv");
+        CSVReader::readExchangeFromFile(prices, "kurs.csv");
+        Timer timer;
+        timer.reset();
         for (PriceFeedData::Price price : prices.priceFeed)
         {
             trading[i].runTradingAsymm(price);
         }
+        time = timer.elapsed();
+        cout << time << " Seconds elapsed\n";
     }
 }
 
