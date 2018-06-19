@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <stdlib.h>
+#include <assert.h>
 
 CoastlineTrader::CoastlineTrader()
 {}
@@ -66,17 +67,21 @@ bool CoastlineTrader::tryToClose(PriceFeedData::Price price)
     {
     	double pricE = (tP > 0.0 ? price.bid : price.ask);
     	double addPnl = 0;
-    	for( uint i = 0; i < prices.size(); ++i )
+        uint len = prices.size();
+    	for( uint i = 0; i < len; i++ )
         {
-    		addPnl = (pricE - prices[i])*sizes[i];
+    		addPnl = (pricE - prices.front())*sizes.front();
     		tempPnl += addPnl;
-    		tP -= sizes[i];
-    		sizes.erase(sizes.begin() + i); prices.erase(sizes.begin() + i);
+    		tP -= sizes.front();
+    		sizes.erase(sizes.begin()); 
+            prices.erase(prices.begin());
     		if (i > 0) increaseLong += -1.0;
     	}
     	pnl += tempPnl;
     	pnlPerc += (tempPnl)/cashLimit * profitTarget;
     	tempPnl = 0;
+        assert(sizes.size() == 0);
+        assert(prices.size() == 0);
     	return true;
     }
     return false;
@@ -107,11 +112,11 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
     lastPrice = price.getMid();
     
     if( !liquidity->computation(price) ){
-        cout << "Didn't compute liquidity!";
+        cout << "Didn't compute liquidity!" << endl;
     }
     
     if( tryToClose(price) ){ /* -- Try to close position -- */
-        cout << "Close";
+        cout << "Close" << endl;
         return true;
     }
     
@@ -151,39 +156,41 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 
                 prices.push_front(sign == 1 ? price.ask : price.bid);
                 assignCashTarget();
-                cout << "Open long";
+                cout << "Open long" << endl;
                 
             }
             else if( tP > 0.0 ){ // Increase long position (buy)
                 int sign = -runner->type;
                 double sizeToAdd = sign*size*fraction*shrinkFlong;
                 if( sizeToAdd < 0.0 ){
-                    cout << "How did this happen! increase position but neg size: " << sizeToAdd;
+                    cout << "How did this happen! increase position but neg size: " << sizeToAdd << endl;
                     sizeToAdd = -sizeToAdd; 
                 }
                 increaseLong += 1.0;
                 tP += sizeToAdd;						
-                sizes.push_front(sizeToAdd);
+                sizes.push_back(sizeToAdd);
                 
-                prices.push_front(sign == 1 ? price.ask : price.bid);
-                cout << "Cascade";
+                prices.push_back(sign == 1 ? price.ask : price.bid);
+                cout << "Cascade" << endl;
             }
         }
         else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
             double pricE = (tP > 0.0 ? price.bid : price.ask);
-            
-            for( uint i = 1; i < prices.size(); ++i ){
-                double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));
+            uint len = prices.size();
+            for( uint i = 1; i < len; ++i ){
+                int removed = 0;
+                double tempP = (tP > 0.0 ? log(pricE/prices[i-removed]) : log(prices[i-removed]/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
-                    double addPnl = (pricE - prices[i])*sizes[i];
+                    double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
                     if( addPnl < 0.0 ){
-                        cout << "Descascade with a loss: " << addPnl;
+                        cout << "Descascade with a loss: " << addPnl << endl;
                     }
                     tempPnl += addPnl;
-                    tP -= sizes[i];
-                    sizes.erase(sizes.begin() + i); prices.erase(sizes.begin() + i);
+                    tP -= sizes[i-removed];
+                    sizes.erase(sizes.begin() + i-removed); 
+                    prices.erase(prices.begin() + i-removed);
                     increaseLong += -1.0;
-                    cout << "Decascade";
+                    cout << "Decascade" << endl;
                 }
             }
         }
@@ -213,51 +220,53 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 }
                 double sizeToAdd = sign*size;
                 if( sizeToAdd > 0.0 ){
-                    cout << "How did this happen! increase position but pos size: " << sizeToAdd;
+                    cout << "How did this happen! increase position but pos size: " << sizeToAdd << endl;
                     sizeToAdd = -sizeToAdd;
                 }
                 tP += sizeToAdd;
                 sizes.push_front(sizeToAdd);
                 
                 prices.push_front(sign == 1 ? price.bid : price.ask);
-                cout << "Open short";
+                cout << "Open short" << endl;
                 assignCashTarget();
             }else if( tP < 0.0 ){
                 int sign = -runner->type;
                 double sizeToAdd = sign*size*fraction*shrinkFshort;
                 if( sizeToAdd > 0.0 ){
-                    cout << "How did this happen! increase position but pos size: " << sizeToAdd;
+                    cout << "How did this happen! increase position but pos size: " << sizeToAdd << endl;
                     sizeToAdd = -sizeToAdd;
                 }
                 
                 tP += sizeToAdd;
-                sizes.push_front(sizeToAdd);
+                sizes.push_back(sizeToAdd);
                 increaseShort += 1.0;
-                prices.push_front(sign == 1 ? price.bid : price.ask);
-                cout << "Cascade";
+                prices.push_back(sign == 1 ? price.bid : price.ask);
+                cout << "Cascade" << endl;
             }
         }
         else if( event < 0.0 && tP < 0.0 ){
             double pricE = (tP > 0.0 ? price.bid : price.ask);
-            
-            for( uint i = 1; i < prices.size(); ++i ){
-                double tempP = (tP > 0.0 ? log(pricE/prices[i]) : log(prices[i]/pricE));
+            uint len = prices.size();
+            for( uint i = 1; i < len; ++i ){
+                int removed = 0;
+                double tempP = (tP > 0.0 ? log(pricE/prices[i-removed]) : log(prices[i-removed]/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
-                    double addPnl = (pricE - prices[i])*sizes[i];
+                    double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
                     if( addPnl < 0.0 ){
-                        cout << "Descascade with a loss: " << addPnl;
+                        cout << "Descascade with a loss: " << addPnl << endl;
                     }
-                    tempPnl += (pricE - prices[i])*sizes[i];
-                    tP -= sizes[i];
-                    sizes.erase(sizes.begin() + i); prices.erase(sizes.begin() + i);
+                    tempPnl += (pricE - prices[i-removed])*sizes[i-removed];
+                    tP -= sizes[i-removed];
+                    sizes.erase(sizes.begin() + i-removed);
+                    prices.erase(prices.begin() + i-removed);
                     increaseShort += -1.0;
-                    cout << "Decascade";
+                    cout << "Decascade" << endl;
                 }
             }
         }
     }
     else{
-        cout << "Should never happen! " << longShort;
+        cout << "Should never happen! " << longShort << endl;
     }
     return true;
 }
