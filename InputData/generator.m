@@ -1,4 +1,6 @@
 function generator(mu, k, sigma,S0)
+% Call like this: generator(0, 0.00005, 0.002, 1)
+
 %GENERATOR Summary of this function goes here
 %   Detailed explanation goes here
 n = 1000000;           % Anzahl der Knicke/Tage
