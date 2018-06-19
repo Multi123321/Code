@@ -1,4 +1,4 @@
-#!/Applications/Octave.app/Contents/Resources/usr/bin/octave-cli -qf
+#!/usr/local/bin/octave -qf
 
 mu = 0;
 k = 0.00005;
