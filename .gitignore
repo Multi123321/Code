@@ -4,6 +4,9 @@
 # output Folder
 **/output
 
+# generierte Kurse
+kurs*.csv
+
 # Prerequisites
 *.d
 
