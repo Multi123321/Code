@@ -9,10 +9,10 @@
 #include <deque>
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>
 #include "PriceFeedData.h"
 
 using namespace std;
-using namespace config;
 
 class CSVReader
 {    
@@ -24,7 +24,7 @@ public:
         string thisVal;
         char cvsSplitBy = ';';
         ifstream inputFile;
-        functions::openInputFile(inputFile, configValues["exchangeInputDir"],  filepath);
+        functions::openInputFile(inputFile, config::configValues["exchangeInputDir"],  filepath);
 
         std::getline(inputFile, line, '\n');
 

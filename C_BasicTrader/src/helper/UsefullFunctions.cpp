@@ -8,14 +8,14 @@ namespace functions
 {
     using namespace std;
 
-    string *binDir;
+    string binDir;
 
     int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode)
     {
-        outputFileStream.open(*binDir + "/" + path + "/" + fileName, mode);
+        outputFileStream.open(binDir + "/" + path + "/" + fileName, mode);
         if(!outputFileStream.good())
         {
-            cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
             return false;
         }
 
@@ -24,10 +24,10 @@ namespace functions
 
     int openInputFile(ifstream & inputFileStream, string path, string fileName)
     {
-        inputFileStream.open(*binDir + "/" + path + "/" + fileName);
+        inputFileStream.open(binDir + "/" + path + "/" + fileName);
         if(!inputFileStream.good())
         {
-            cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
             return false;
         }
 
@@ -53,10 +53,7 @@ namespace functions
 
     void init(int argc, const char *argv[])
     {
-        cout << "Init " << __LINE__;
-        binDir = new std::string(argv[0]);
-        cout << "Init " << __LINE__;
-        binDir = new std::string(getPathName(*binDir));
-        cout << "Init " << __LINE__;
+        binDir = string(argv[0]);
+        binDir = *(new std::string(getPathName(binDir)));
     }
 }
