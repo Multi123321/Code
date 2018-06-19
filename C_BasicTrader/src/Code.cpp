@@ -7,16 +7,11 @@
 #include "CSVReader.h"
 
 using namespace std;
-using namespace config;
 
 int main(int argc, const char *argv[]) 
 {
-    UNUSED(argc);
-
-    cout << __FILE__ << " " << __LINE__;
-
     functions::init(argc, argv);
-    loadConfig();
+    config::loadConfig();
 
     // TODO Currency configuration
     const int numberOfCurrencies = 1;
