@@ -8,55 +8,55 @@ namespace functions
 {
     using namespace std;
 
-    string binDir;
+    string *binDir;
 
-//     int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode)
-//     {
-//         outputFileStream.open(*binDir + "/" + path + "/" + fileName, mode);
-//         if(!outputFileStream.good())
-//         {
-//             cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
-//             return false;
-//         }
+    int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode)
+    {
+        outputFileStream.open(*binDir + "/" + path + "/" + fileName, mode);
+        if(!outputFileStream.good())
+        {
+            cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            return false;
+        }
 
-//         return true;
-//     }
+        return true;
+    }
 
-//     int openInputFile(ifstream & inputFileStream, string path, string fileName)
-//     {
-//         inputFileStream.open(*binDir + "/" + path + "/" + fileName);
-//         if(!inputFileStream.good())
-//         {
-//             cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
-//             return false;
-//         }
+    int openInputFile(ifstream & inputFileStream, string path, string fileName)
+    {
+        inputFileStream.open(*binDir + "/" + path + "/" + fileName);
+        if(!inputFileStream.good())
+        {
+            cout << "Could not open " + *binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            return false;
+        }
 
-//         return true;
-//     }
+        return true;
+    }
 
-//     using std::string;
+    using std::string;
 
-//     string getPathName(const string& s) {
-//         char sep = '/';
-// #ifdef _WIN32
-//         sep = '\\';
-// #endif
+    string getPathName(const string& s) {
+        char sep = '/';
+#ifdef _WIN32
+        sep = '\\';
+#endif
 
-//         size_t i = s.rfind(sep, s.length());
-//         if (i != string::npos) 
-//         {
-//             return(s.substr(0, i));
-//         }
+        size_t i = s.rfind(sep, s.length());
+        if (i != string::npos) 
+        {
+            return(s.substr(0, i));
+        }
 
-//         return("");
-//     }
+        return("");
+    }
 
-//     void init(int argc, const char *argv[])
-//     {
-//         cout << "Init " << __LINE__;
-//         binDir = new std::string(argv[0]);
-//         cout << "Init " << __LINE__;
-//         binDir = new std::string(getPathName(*binDir));
-//         cout << "Init " << __LINE__;
-//     }
+    void init(int argc, const char *argv[])
+    {
+        cout << "Init " << __LINE__;
+        binDir = new std::string(argv[0]);
+        cout << "Init " << __LINE__;
+        binDir = new std::string(getPathName(*binDir));
+        cout << "Init " << __LINE__;
+    }
 }
