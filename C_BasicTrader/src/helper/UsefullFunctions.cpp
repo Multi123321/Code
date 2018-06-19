@@ -16,7 +16,7 @@ namespace functions
         outputFileStream.open(binDir + "/" + path + "/" + fileName, mode);
         if(!outputFileStream.good())
         {
-            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!" << std::endl;
             return false;
         }
 
@@ -28,7 +28,7 @@ namespace functions
         inputFileStream.open(binDir + "/" + path + "/" + fileName);
         if(!inputFileStream.good())
         {
-            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!\n";
+            cout << "Could not open " + binDir + "/" + path + "/" + fileName + "! Exit now!" << std::endl;
             return false;
         }
 
