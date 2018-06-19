@@ -35,7 +35,7 @@ int main(int argc, const char *argv[])
     for( int i = 0; i < numberOfCurrencies; ++i )
     {
         PriceFeedData prices;
-        CSVReader::readExchangeFromFile(prices, "kurs.csv");
+        CSVReader::readExchangeFromFile(prices, "EUR_USD.csv");
         Timer timer;
         timer.reset();
         for (PriceFeedData::Price price : prices.priceFeed)

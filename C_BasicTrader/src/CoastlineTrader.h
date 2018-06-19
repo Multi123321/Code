@@ -20,17 +20,17 @@ private:
     
     int longShort;
     
-    bool initalized;
-    Runner* runner;
+    bool initalized = false;
+    Runner runner;
     //TODO
-    Runner* runnerG[2][2];
+    Runner runnerG[2][2];
     
     double increaseLong, increaseShort;
     
     
     string fxRate;
     
-    LocalLiquidity* liquidity;
+    LocalLiquidity liquidity;
 public:    
     double tP; /* -- Total position -- */
     double profitTarget;

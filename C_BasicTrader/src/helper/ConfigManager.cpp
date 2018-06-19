@@ -15,7 +15,7 @@ namespace config
 
     void loadConfig()
     {
-        configValues = *(new ConfigInfo());
+        configValues = ConfigInfo();
 
         string line;
 

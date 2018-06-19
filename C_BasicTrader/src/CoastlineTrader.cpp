@@ -81,8 +81,8 @@ bool CoastlineTrader::tryToClose(PriceFeedData::Price price)
     	pnl += tempPnl;
     	pnlPerc += (tempPnl)/cashLimit * profitTarget;
     	tempPnl = 0;
-        assert(sizes.size() == 0);
-        assert(prices.size() == 0);
+        assert(sizes.empty());
+        assert(prices.empty());
     	return true;
     }
     return false;
@@ -98,21 +98,21 @@ bool CoastlineTrader::assignCashTarget()
 bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeInv)
 {
     if( !initalized ){
-        runner = new Runner(deltaUp, deltaDown, price, fxRate, deltaUp, deltaDown);
-                
-        runnerG[0][0] = new Runner(0.75*deltaUp, 1.50*deltaDown, price, fxRate, 0.75*deltaUp, 0.75*deltaUp);
-        runnerG[0][1] = new Runner(0.50*deltaUp, 2.00*deltaDown, price, fxRate, 0.50*deltaUp, 0.50*deltaUp);
-        
-        runnerG[1][0] = new Runner(1.50*deltaUp, 0.75*deltaDown, price, fxRate, 0.75*deltaDown, 0.75*deltaDown);
-        runnerG[1][1] = new Runner(2.00*deltaUp, 0.50*deltaDown, price, fxRate, 0.50*deltaDown, 0.50*deltaDown);
-        
-        liquidity = new LocalLiquidity(deltaOriginal, deltaUp, deltaDown, price, deltaOriginal*2.525729, 50.0);
+        runner = Runner(deltaUp, deltaDown, price, fxRate, deltaUp, deltaDown);
+
+        runnerG[0][0] = Runner(0.75*deltaUp, 1.50*deltaDown, price, fxRate, 0.75*deltaUp, 0.75*deltaUp);
+        runnerG[0][1] = Runner(0.50*deltaUp, 2.00*deltaDown, price, fxRate, 0.50*deltaUp, 0.50*deltaUp);
+
+        runnerG[1][0] = Runner(1.50*deltaUp, 0.75*deltaDown, price, fxRate, 0.75*deltaDown, 0.75*deltaDown);
+        runnerG[1][1] = Runner(2.00*deltaUp, 0.50*deltaDown, price, fxRate, 0.50*deltaDown, 0.50*deltaDown);
+
+        liquidity = LocalLiquidity(deltaOriginal, deltaUp, deltaDown, price, deltaOriginal*2.525729, 50.0);
         initalized = true;
     }
 
     lastPrice = price.getMid();
     
-    if( !liquidity->computation(price) ){
+    if( !liquidity.computation(price) ){
         cout << "Didn't compute liquidity!" << endl;
     }
     
@@ -125,27 +125,27 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
     int event = 0;
     
     double fraction = 1.0;
-    double size = (liquidity->liq < 0.5 ? 0.5 : 1.0);
-    size = (liquidity->liq < 0.1 ? 0.1 : size);
+    double size = (liquidity.liq < 0.5 ? 0.5 : 1.0);
+    size = (liquidity.liq < 0.1 ? 0.1 : size);
     
     if( longShort == 1 ){ // Long positions only
-        event = runner->run(price);
+        event = runner.run(price);
         
         if( 15.0 <= tP && tP < 30.0 ){
-            event = runnerG[0][0]->run(price);
-            runnerG[0][1]->run(price);
+            event = runnerG[0][0].run(price);
+            runnerG[0][1].run(price);
             fraction = 0.5;
         }else if( tP >= 30.0 ){
-            event = runnerG[0][1]->run(price);
-            runnerG[0][0]->run(price);
+            event = runnerG[0][1].run(price);
+            runnerG[0][0].run(price);
             fraction = 0.25;
         }else{
-            runnerG[0][0]->run(price); runnerG[0][1]->run(price);
+            runnerG[0][0].run(price); runnerG[0][1].run(price);
         }
         
         if( event < 0 ){
             if( tP == 0.0 ){ // Open long position
-                int sign = -runner->type;
+                int sign = -runner.type;
                 if( std::abs(oppositeInv) > 15.0 ){
                     size = 1.0;
                     if( std::abs(oppositeInv) > 30.0 ){
@@ -162,7 +162,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 
             }
             else if( tP > 0.0 ){ // Increase long position (buy)
-                int sign = -runner->type;
+                int sign = -runner.type;
                 double sizeToAdd = sign*size*fraction*shrinkFlong;
                 if( sizeToAdd < 0.0 ){
                     cout << "How did this happen! increase position but neg size: " << sizeToAdd << endl;
@@ -179,18 +179,20 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
             double pricE = (tP > 0.0 ? price.bid : price.ask);
             uint len = prices.size();
+            int removed = 0;
             for( uint i = 1; i < len; ++i ){
-                int removed = 0;
-                double tempP = (tP > 0.0 ? log(pricE/prices[i-removed]) : log(prices[i-removed]/pricE));
+                int idx = i-removed;
+                double tempP = (tP > 0.0 ? log(pricE/prices.at(idx)) : log(prices.at(idx)/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
-                    double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
+                    double addPnl = (pricE - prices.at(idx))*sizes.at(idx);
                     if( addPnl < 0.0 ){
                         IFDEBUG(cout << "Descascade with a loss: " << addPnl << endl);
                     }
                     tempPnl += addPnl;
-                    tP -= sizes[i-removed];
-                    sizes.erase(sizes.begin() + i-removed); 
-                    prices.erase(prices.begin() + i-removed);
+                    tP -= sizes.at(idx);
+                    sizes.erase(sizes.begin() + idx); 
+                    prices.erase(prices.begin() + idx);
+                    removed++;
                     increaseLong += -1.0;
                     IFDEBUG(cout << "Decascade" << endl);
                 }
@@ -198,22 +200,22 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         }
     }
     else if( longShort == -1 ){ // Short positions only
-        event = runner->run(price);
+        event = runner.run(price);
         if( -30.0 < tP && tP < -15.0 ){
-            event = runnerG[1][0]->run(price);
-            runnerG[1][1]->run(price);
+            event = runnerG[1][0].run(price);
+            runnerG[1][1].run(price);
             fraction = 0.5;
         }else if( tP <= -30.0 ){
-            event = runnerG[1][1]->run(price);
-            runnerG[1][0]->run(price);
+            event = runnerG[1][1].run(price);
+            runnerG[1][0].run(price);
             fraction = 0.25;
         }else{
-            runnerG[1][0]->run(price); runnerG[1][1]->run(price);
+            runnerG[1][0].run(price); runnerG[1][1].run(price);
         }
         
         if( event > 0 ){
             if( tP == 0.0 ){ // Open short position
-                int sign = -runner->type;
+                int sign = -runner.type;
                 if( abs(oppositeInv) > 15.0 ){
                     size = 1.0;
                     if( abs(oppositeInv) > 30.0 ){
@@ -232,7 +234,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 IFDEBUG(cout << "Open short" << endl);
                 assignCashTarget();
             }else if( tP < 0.0 ){
-                int sign = -runner->type;
+                int sign = -runner.type;
                 double sizeToAdd = sign*size*fraction*shrinkFshort;
                 if( sizeToAdd > 0.0 ){
                     cout << "How did this happen! increase position but pos size: " << sizeToAdd << endl;
@@ -249,18 +251,20 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         else if( event < 0.0 && tP < 0.0 ){
             double pricE = (tP > 0.0 ? price.bid : price.ask);
             uint len = prices.size();
+            int removed = 0;
             for( uint i = 1; i < len; ++i ){
-                int removed = 0;
-                double tempP = (tP > 0.0 ? log(pricE/prices[i-removed]) : log(prices[i-removed]/pricE));
+                int idx = i-removed;
+                double tempP = (tP > 0.0 ? log(pricE/prices.at(idx)) : log(prices.at(idx)/pricE));
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
-                    double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
+                    double addPnl = (pricE - prices.at(idx))*sizes.at(idx);
                     if( addPnl < 0.0 ){
                         IFDEBUG(cout << "Descascade with a loss: " << addPnl << endl);
                     }
-                    tempPnl += (pricE - prices[i-removed])*sizes[i-removed];
-                    tP -= sizes[i-removed];
-                    sizes.erase(sizes.begin() + i-removed);
-                    prices.erase(prices.begin() + i-removed);
+                    tempPnl += (pricE - prices.at(idx))*sizes.at(idx);
+                    tP -= sizes.at(idx);
+                    sizes.erase(sizes.begin() + idx);
+                    prices.erase(prices.begin() + idx);
+                    removed++;
                     increaseShort += -1.0;
                     IFDEBUG(cout << "Decascade" << endl);
                 }
