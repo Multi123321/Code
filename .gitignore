@@ -1,6 +1,9 @@
 # bin Folder
 **/bin
 
+# output Folder
+**/output
+
 # Prerequisites
 *.d
 
