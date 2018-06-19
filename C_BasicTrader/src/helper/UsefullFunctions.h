@@ -1,18 +1,20 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <string>
+
 
 namespace functions
 {
+
     using namespace std;
 
-    static string binDir;
+    extern std::string binDir;
 
-    inline static int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode = std::ofstream::out)
+    inline static int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode = ofstream::out)
     {
         outputFileStream.open(binDir + "/" + path + "/" + fileName, mode);
         if(!outputFileStream.good())
@@ -58,5 +60,18 @@ namespace functions
         binDir = argv[0];
         binDir = getPathName(binDir);
     }
+
+
+    // using namespace std;
+
+    // int openOutputFile(ofstream & outputFileStream, string path, string fileName, std::ios_base::openmode mode = std::ofstream::out);
+
+    // int openInputFile(ifstream & inputFileStream, string path, string fileName);
+
+    // using std::string;
+
+    // string getPathName(const string& s);
+
+    // void init(int argc, const char *argv[]);
 }
 #endif

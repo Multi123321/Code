@@ -11,6 +11,10 @@ using namespace config;
 
 int main(int argc, const char *argv[]) 
 {
+    UNUSED(argc);
+
+    cout << __FILE__ << " " << __LINE__;
+
     functions::init(argc, argv);
     loadConfig();
 
