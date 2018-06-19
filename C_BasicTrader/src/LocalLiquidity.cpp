@@ -2,6 +2,7 @@
 #include "PriceFeedData.h"
 #include <math.h>
 #include <stdlib.h>
+#include "helper/Macros.h"
 
 using namespace std;
 
@@ -9,7 +10,7 @@ LocalLiquidity::LocalLiquidity()
 {}
 
 LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaDownArg, double dStarArg, double alphaArg) : 
-    delta(deltaArg), deltaUp(deltaUpArg), deltaDown(deltaDownArg), dStar(dStarArg), alpha(alphaArg)
+    deltaUp(deltaUpArg), deltaDown(deltaDownArg), delta(deltaArg), dStar(dStarArg), alpha(alphaArg)
 {
     type = -1; 
     initalized = false;
@@ -18,7 +19,7 @@ LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaD
 } 
 
 LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaDownArg, PriceFeedData::Price priceArg, double dStarArg, double alphaArg) : 
-    delta(deltaArg), deltaUp(deltaUpArg), deltaDown(deltaDownArg), dStar(dStarArg), alpha(alphaArg)
+    deltaUp(deltaUpArg), deltaDown(deltaDownArg), delta(deltaArg), dStar(dStarArg), alpha(alphaArg)
 {
     type = -1;
     extreme = reference = priceArg.mid;
@@ -29,6 +30,7 @@ LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaD
 
 bool LocalLiquidity::computeH1H2exp(double dS)
 {
+    UNUSED(dS);
     H1 = -1 * exp(-dStar/delta)*log(exp(-dStar/delta)) - (1.0 - exp(-dStar/delta))*log(1.0 - exp(-dStar/delta));
     H2 = exp(-dStar/delta)*pow(log(exp(-dStar/delta)), 2.0) - (1.0 - exp(-dStar/delta))*pow(log(1.0 - exp(-dStar/delta)), 2.0) - H1*H1;
     return true; 
@@ -63,10 +65,7 @@ double LocalLiquidity::CumNorm(double x)
     return n;
 }
 
-int LocalLiquidity::run(PriceFeedData::Price price){
-    if( &price == NULL )
-        return 0;
-    
+int LocalLiquidity::run(PriceFeedData::Price price){    
     if( !initalized ){
         type = -1; initalized = true;
         extreme = reference = price.mid;
@@ -106,10 +105,7 @@ int LocalLiquidity::run(PriceFeedData::Price price){
     return 0;
 }
 
-bool LocalLiquidity::computation(PriceFeedData::Price price){
-    if( &price == NULL )
-        return false;
-    
+bool LocalLiquidity::computation(PriceFeedData::Price price){    
     int event = run(price);
     if( event != 0 ){
         surp = alphaWeight*(abs(event) == 1 ? 0.08338161 : 2.525729) + (1.0 - alphaWeight)*surp;

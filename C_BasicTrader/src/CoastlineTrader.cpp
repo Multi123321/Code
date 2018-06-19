@@ -11,7 +11,7 @@ CoastlineTrader::CoastlineTrader()
 {}
 
 CoastlineTrader::CoastlineTrader(double dOriginal, double dUp, double dDown, double profitT, string FxRate, int lS) :
-    deltaOriginal(dOriginal), deltaUp(dUp), deltaDown(dDown), 
+    deltaUp(dUp), deltaDown(dDown), deltaOriginal(dOriginal), 
     longShort(lS), profitTarget(profitT), cashLimit(profitT)
 {
     tP = 0.0; /* -- Total position -- */

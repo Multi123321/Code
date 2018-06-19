@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <string>
 #include "UsefullFunctions.h"
+#include "Macros.h"
 
 namespace functions
 {
@@ -53,6 +54,8 @@ namespace functions
 
     void init(int argc, const char *argv[])
     {
+        UNUSED(argc);
+
         binDir = string(argv[0]);
         binDir = *(new std::string(getPathName(binDir)));
     }

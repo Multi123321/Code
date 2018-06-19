@@ -14,7 +14,7 @@ private:
     deque<double> prices;
     deque<double> sizes;
     
-    double deltaUp, deltaDown, deltaLiq, deltaOriginal;
+    double deltaUp, deltaDown, deltaOriginal;
     double shrinkFlong, shrinkFshort;
     
     
