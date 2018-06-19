@@ -22,7 +22,7 @@ public:
         string csvFile = filepath;
         string line;
         string thisVal;
-        char cvsSplitBy = ';';
+        char cvsSplitBy = ',';
         ifstream inputFile;
         functions::openInputFile(inputFile, config::configValues["exchangeInputDir"],  filepath);
 
