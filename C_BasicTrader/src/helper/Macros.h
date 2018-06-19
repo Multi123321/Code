@@ -12,4 +12,10 @@
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define TRACE() cout << __PRETTY_FUNCTION__ << " Line: " << __LINE__ << " in file: " << __FILENAME__ << std::endl;
 
+#ifdef NDEBUG
+#define IFDEBUG(x) do{} while(0)
+#else
+#define IFDEBUG(x) x
+#endif
+
 #endif

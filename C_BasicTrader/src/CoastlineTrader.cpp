@@ -5,6 +5,7 @@
 #include <cmath>
 #include <stdlib.h>
 #include <assert.h>
+#include "helper/Macros.h"
 
 CoastlineTrader::CoastlineTrader()
 {}
@@ -116,7 +117,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
     }
     
     if( tryToClose(price) ){ /* -- Try to close position -- */
-        cout << "Close" << endl;
+        IFDEBUG(cout << "Close" << endl);
         return true;
     }
     
@@ -156,7 +157,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 
                 prices.push_front(sign == 1 ? price.ask : price.bid);
                 assignCashTarget();
-                cout << "Open long" << endl;
+                IFDEBUG(cout << "Open long" << endl);
                 
             }
             else if( tP > 0.0 ){ // Increase long position (buy)
@@ -171,7 +172,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 sizes.push_back(sizeToAdd);
                 
                 prices.push_back(sign == 1 ? price.ask : price.bid);
-                cout << "Cascade" << endl;
+                IFDEBUG(cout << "Cascade" << endl);
             }
         }
         else if( event > 0 &&  tP > 0.0 ){ // Possibility to decrease long position only at intrinsic events
@@ -183,14 +184,14 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
                     double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
                     if( addPnl < 0.0 ){
-                        cout << "Descascade with a loss: " << addPnl << endl;
+                        IFDEBUG(cout << "Descascade with a loss: " << addPnl << endl);
                     }
                     tempPnl += addPnl;
                     tP -= sizes[i-removed];
                     sizes.erase(sizes.begin() + i-removed); 
                     prices.erase(prices.begin() + i-removed);
                     increaseLong += -1.0;
-                    cout << "Decascade" << endl;
+                    IFDEBUG(cout << "Decascade" << endl);
                 }
             }
         }
@@ -227,7 +228,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 sizes.push_front(sizeToAdd);
                 
                 prices.push_front(sign == 1 ? price.bid : price.ask);
-                cout << "Open short" << endl;
+                IFDEBUG(cout << "Open short" << endl);
                 assignCashTarget();
             }else if( tP < 0.0 ){
                 int sign = -runner->type;
@@ -241,7 +242,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 sizes.push_back(sizeToAdd);
                 increaseShort += 1.0;
                 prices.push_back(sign == 1 ? price.bid : price.ask);
-                cout << "Cascade" << endl;
+                IFDEBUG(cout << "Cascade" << endl);
             }
         }
         else if( event < 0.0 && tP < 0.0 ){
@@ -253,14 +254,14 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 if( tempP >= (tP > 0.0 ? deltaUp : deltaDown) ){
                     double addPnl = (pricE - prices[i-removed])*sizes[i-removed];
                     if( addPnl < 0.0 ){
-                        cout << "Descascade with a loss: " << addPnl << endl;
+                        IFDEBUG(cout << "Descascade with a loss: " << addPnl << endl);
                     }
                     tempPnl += (pricE - prices[i-removed])*sizes[i-removed];
                     tP -= sizes[i-removed];
                     sizes.erase(sizes.begin() + i-removed);
                     prices.erase(prices.begin() + i-removed);
                     increaseShort += -1.0;
-                    cout << "Decascade" << endl;
+                    IFDEBUG(cout << "Decascade" << endl);
                 }
             }
         }
