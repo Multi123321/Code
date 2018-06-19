@@ -57,6 +57,6 @@ namespace functions
         UNUSED(argc);
 
         binDir = string(argv[0]);
-        binDir = *(new std::string(getPathName(binDir)));
+        binDir = std::string(getPathName(binDir));
     }
 }

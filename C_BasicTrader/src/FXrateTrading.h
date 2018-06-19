@@ -8,9 +8,11 @@
 class FXrateTrading
 {
 private:
-    vector<CoastlineTrader*> coastTraderLong;
-    vector<CoastlineTrader*> coastTraderShort;
+    vector<CoastlineTrader> coastTraderLong;
+    vector<CoastlineTrader> coastTraderShort;
     
+    bool initialized = false;
+
     string FXrate;
     double currentTime, oneDay;
 

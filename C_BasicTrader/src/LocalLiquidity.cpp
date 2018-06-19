@@ -107,6 +107,15 @@ int LocalLiquidity::run(PriceFeedData::Price price){
 
 bool LocalLiquidity::computation(PriceFeedData::Price price){    
     int event = run(price);
+
+    //needed or else jump on uninitialized values warning
+    liq = 0;
+    upLiq = 0;
+    downLiq = 0;
+    surp = 0; 
+    downSurp = 0;
+    upSurp = 0;
+
     if( event != 0 ){
         surp = alphaWeight*(abs(event) == 1 ? 0.08338161 : 2.525729) + (1.0 - alphaWeight)*surp;
         
@@ -120,5 +129,6 @@ bool LocalLiquidity::computation(PriceFeedData::Price price){
         upLiq = 1.0 - CumNorm(sqrt(alpha)*(upSurp - H1)/sqrt(H2)); 
         downLiq = 1.0 - CumNorm(sqrt(alpha)*(downSurp - H1)/sqrt(H2)); 
     }
+
     return true;
 }
