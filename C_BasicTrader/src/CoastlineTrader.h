@@ -5,49 +5,51 @@
 #include "LocalLiquidity.h"
 #include "Runner.h"
 #include <deque>
+#include <x86intrin.h>
 
 using namespace std;
 
+typedef __m256d mask;
+
 class CoastlineTrader
 {
-private:
-    deque<double> prices;
-    deque<double> sizes;
-    
-    double deltaUp, deltaDown, deltaOriginal;
-    double shrinkFlong, shrinkFshort;
-    
-    
+  private:
+    deque<double> prices[4];
+    deque<double> sizes[4];
+
+    __m256d deltaUp, deltaDown, deltaOriginal;
+    __m256d shrinkFlong, shrinkFshort;
+
     int longShort;
-    
+
     bool initalized = false;
     Runner runner;
     //TODO
     Runner runnerG[2][2];
-    
-    double increaseLong, increaseShort;
-    
-    
+
+    __m256d increaseLong, increaseShort;
+
     string fxRate;
-    
+
     LocalLiquidity liquidity;
-public:    
-    double tP; /* -- Total position -- */
-    double profitTarget;
-    double cashLimit;
-    double pnl, tempPnl;
-    double pnlPerc;
-    double lastPrice;
+
+  public:
+    __m256d tP; /* -- Total position -- */
+    __m256d profitTarget;
+    __m256d cashLimit;
+    __m256d pnl, tempPnl;
+    __m256d pnlPerc;
+    __m256d lastPrice;
 
     CoastlineTrader();
-    CoastlineTrader(double dOriginal, double dUp, double dDown, double profitT, string FxRate, int lS);
+    CoastlineTrader(__m256d dOriginal, __m256d dUp, __m256d dDown, __m256d profitT, string FxRate, int lS);
 
-    double computePnl(PriceFeedData::Price price);
-    double computePnlLastPrice();
-    double getPercPnl(PriceFeedData::Price price);
-    bool tryToClose(PriceFeedData::Price price);
-    bool assignCashTarget();
-    bool runPriceAsymm(PriceFeedData::Price price, double oppositeInv);
+    __m256d computePnl(PriceFeedData::Price price);
+    __m256d computePnlLastPrice();
+    __m256d getPercPnl(PriceFeedData::Price price);
+    mask tryToClose(PriceFeedData::Price price);
+    void assignCashTarget();
+    mask runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv);
 };
 
 #endif

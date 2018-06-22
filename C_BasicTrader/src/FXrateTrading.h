@@ -7,18 +7,18 @@
 
 class FXrateTrading
 {
-private:
-    vector<CoastlineTrader> coastTraderLong;
-    vector<CoastlineTrader> coastTraderShort;
-    
+  private:
+    CoastlineTrader coastTraderLong;
+    CoastlineTrader coastTraderShort;
+
     bool initialized = false;
 
     string FXrate;
     double currentTime, oneDay;
 
     bool printDataHeader();
-public:
-    
+
+  public:
     FXrateTrading();
     FXrateTrading(string rate, int nbOfCoastTraders, double deltas[]);
 
