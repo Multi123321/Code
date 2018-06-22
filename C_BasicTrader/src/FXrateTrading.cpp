@@ -73,18 +73,16 @@ bool FXrateTrading::printDataAsymm(double time)
     double totalPnl = 0.0;
     double totalPnlPerc = 0.0;
     double price = -1.0;
-    for (uint i = 0; i < coastTraderLong.size(); ++i)
-    {
-        if (i == 0)
-        {
-            price = coastTraderLong[i].lastPrice;
-        }
-        totalLong += coastTraderLong[i].tP;
-        totalShort += coastTraderShort[i].tP;
-        totalPos += (coastTraderLong[i].tP + coastTraderShort[i].tP);
-        totalPnl += (coastTraderLong[i].pnl + coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice() + coastTraderShort[i].pnl + coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice());
-        totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice()) / coastTraderLong[i].cashLimit * coastTraderLong[i].profitTarget + coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice()) / coastTraderShort[i].cashLimit * coastTraderShort[i].profitTarget);
-    }
+
+    price = coastTraderLong.lastPrice;
+    totalLong = AVXHelper::verticalSum(coastTraderLong.tP);
+    totalShort = AVXHelper::verticalSum(coastTraderShort.tP);
+    totalPos = totalLong + totalShort;
+    totalPnl = AVXHelper::verticalSum(coastTraderLong.pnl) + AVXHelper::verticalSum(coastTraderLong.tempPnl) + AVXHelper::verticalSum(coastTraderLong.computePnlLastPrice()) + AVXHelper::verticalSum(coastTraderShort.pnl) + AVXHelper::verticalSum(coastTraderShort.tempPnl) + AVXHelper::verticalSum(coastTraderShort.computePnlLastPrice());
+    totalPnlPerc = AVXHelper::verticalSum(coastTraderLong.pnlPerc) + AVXHelper::verticalSum(coastTraderShort.pnlPerc);
+    totalPnlPerc += AVXHelper::verticalSum(_mm256_div_pd(_mm256_add_pd(coastTraderLong.tempPnl, coastTraderLong.computePnlLastPrice()), _mm256_mul_pd(coastTraderLong.cashLimit, coastTraderLong.profitTarget)));
+    totalPnlPerc += AVXHelper::verticalSum(_mm256_div_pd(_mm256_add_pd(coastTraderShort.tempPnl, coastTraderShort.computePnlLastPrice()), _mm256_mul_pd(coastTraderShort.cashLimit, coastTraderShort.profitTarget)));
+
     outputFile << ((((long)time / 3600000) / 24) + 25569) << "," << totalPnl << "," << totalPnlPerc << "," << totalPos << "," << totalLong << "," << totalShort << "," << price << endl;
 
     outputFile.close();
