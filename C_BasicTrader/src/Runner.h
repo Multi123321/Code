@@ -7,9 +7,8 @@
 
 class Runner
 {
-private:
-
-public:
+  private:
+  public:
     __m256d prevExtreme;
     __m256i prevExtremeTime;
 
@@ -23,7 +22,7 @@ public:
     __m256d deltaDown;
     __m256d deltaStarUp, deltaStarDown;
     __m256d osL;
-    __m128i type;
+    __m256d type;
     bool initalized;
     __m256d reference;
 
@@ -34,10 +33,8 @@ public:
     Runner(__m256d threshUp, __m256d threshDown, double price, std::string file, __m256d dStarUp, __m256d dStarDown);
     Runner(__m256d threshUp, __m256d threshDown, std::string file, __m256d dStarUp, __m256d dStarDown);
 
-    __m128i run(PriceFeedData::Price price);
-    __m128i run(double price);
-
-
+    __m256d run(PriceFeedData::Price price);
+    __m256d run(double price);
 };
 
 #endif
