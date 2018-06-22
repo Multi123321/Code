@@ -6,6 +6,7 @@
 #include <omp.h>
 #include <x86intrin.h>
 
+#include "AVXHelper.h"
 #include "PriceFeedData.h"
 #include "FXrateTrading.h"
 #include "CSVReader.h"
@@ -25,7 +26,7 @@ int main(int argc, const char *argv[])
 
     // TODO Threshold configuration  (see below)
     const int numberOfThresholds = 4;
-    __m256d deltaS = {0.25 / 100.0, 0.5 / 100.0, 1.0 / 100.0, 1.5 / 100.0};
+    __m256d deltaS = _mm256_set_pd(1.5 / 100.0, 1.0 / 100.0, 0.5 / 100.0, 0.25 / 100.0);
 
     PriceFeedData prices[numberOfCurrencies];
 

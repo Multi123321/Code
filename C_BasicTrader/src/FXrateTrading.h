@@ -2,6 +2,7 @@
 #define FX_RATE_TRADING_H
 
 #include "CoastlineTrader.h"
+#include "AVXHelper.h"
 #include <string>
 #include <vector>
 
