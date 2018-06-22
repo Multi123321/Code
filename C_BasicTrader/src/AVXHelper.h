@@ -4,6 +4,7 @@
 #include <x86intrin.h>
 #include <avxintrin.h>
 #include <immintrin.h>
+#include <math.h>
 
 class AVXHelper
 {
@@ -21,6 +22,7 @@ class AVXHelper
     static inline __m256d multiply(__m256d first, __m256d second, __m256d third, __m256d forth);
     static inline __m256d applyMask(__m256d value, __m256d mask);
     static inline __m256d invert(__m256d value);
+    static inline double verticalSum(__m256d value);
     static inline void avxLogDouble(__m256d &input);
 };
 
@@ -75,6 +77,12 @@ inline void AVXHelper::avxLogDouble(__m256d &input)
     {
         ((double *)&input)[i] = log(((double *)&input)[i]);
     }
+}
+
+inline double AVXHelper::verticalSum(__m256d value)
+{
+    __m256d tmp = _mm256_hadd_pd(value, value);
+    return ((double *)&tmp)[0] + ((double *)&tmp)[2];
 }
 
 inline __m256d AVXHelper::invert(__m256d value)

@@ -2,6 +2,7 @@
 #define RUNNER_H
 
 #include "PriceFeedData.h"
+#include "AVXHelper.h"
 #include <string>
 #include <x86intrin.h>
 
