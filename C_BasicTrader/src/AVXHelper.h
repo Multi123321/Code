@@ -2,6 +2,8 @@
 #define AVX_HELPER_H
 
 #include <x86intrin.h>
+#include <avxintrin.h>
+#include <immintrin.h>
 
 class AVXHelper
 {
