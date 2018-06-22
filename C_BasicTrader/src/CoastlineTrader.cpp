@@ -243,7 +243,7 @@ mask CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             __m256d sign = _mm256_mul_pd(runner.type, _mm_set1_pd(-1.0));
 
             __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, _mm256_setzero_pd(), _CMP_EQ_OS);
-            AVXHelper::applyMask(maskTpEqualsZero, maskEventSmallerZero);
+            maskTpEqualsZero = AVXHelper::applyMask(maskTpEqualsZero, maskEventSmallerZero);
             //if (tP == 0.0) -> use maskTpEqualsZero
             { // Open long position
                 __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
