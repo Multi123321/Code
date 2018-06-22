@@ -4,6 +4,7 @@
 #include "helper/Timer.h"
 
 #include <omp.h>
+#include <x86intrin.h>
 
 #include "PriceFeedData.h"
 #include "FXrateTrading.h"
@@ -11,7 +12,7 @@
 
 using namespace std;
 
-int main(int argc, const char *argv[]) 
+int main(int argc, const char *argv[])
 {
     functions::init(argc, argv);
     config::loadConfig();
@@ -19,31 +20,30 @@ int main(int argc, const char *argv[])
     // TODO Currency configuration
     const int numberOfCurrencies = 4;
     string ccyList[numberOfCurrencies] = {"kurs1.csv", "kurs2.csv", "kurs3.csv", "kurs4.csv"};
-    
+
     FXrateTrading trading[numberOfCurrencies];
-    
+
     // TODO Threshold configuration  (see below)
     const int numberOfThresholds = 4;
-    double deltaS[numberOfThresholds] = {0.25/100.0, 0.5/100.0, 1.0/100.0, 1.5/100.0};
+    __m256d deltaS = {0.25 / 100.0, 0.5 / 100.0, 1.0 / 100.0, 1.5 / 100.0};
 
     PriceFeedData prices[numberOfCurrencies];
-    
-    #pragma omp parallel for
-    for( int i = 0; i < numberOfCurrencies; ++i )
+
+#pragma omp parallel for
+    for (int i = 0; i < numberOfCurrencies; ++i)
     {
-        trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);        
-        
+        trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);
+
         CSVReader::readExchangeFromFile(prices[i], ccyList[i]);
     }
-    
-    double time;
 
+    double time;
 
     Timer totalTimer;
     totalTimer.reset();
-    // Run
-    #pragma omp parallel for
-    for( int i = 0; i < numberOfCurrencies; ++i )
+// Run
+#pragma omp parallel for
+    for (int i = 0; i < numberOfCurrencies; ++i)
     {
         Timer timer;
         timer.reset();
@@ -57,4 +57,3 @@ int main(int argc, const char *argv[])
 
     cout << "Total time: " << totalTimer.elapsed() << std::endl;
 }
-

@@ -17,7 +17,7 @@ FXrateTrading::FXrateTrading()
     initialized = false;
 }
 
-FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
+FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, __m256d &deltas)
 {
     currentTime = 0;
     oneDay = 24.0 * 60.0 * 60.0 * 1000.0;
@@ -31,10 +31,8 @@ FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
         exit(EXIT_FAILURE);
     }
 
-    __m256d delta256 = _mm256_loadu_pd(deltas);
-
-    coastTraderLong = CoastlineTrader(delta256, delta256, delta256, delta256, rate, 1);
-    coastTraderShort = CoastlineTrader(delta256, delta256, delta256, delta256, rate, -1);
+    coastTraderLong = CoastlineTrader(deltas, deltas, deltas, deltas, rate, 1);
+    coastTraderShort = CoastlineTrader(deltas, deltas, deltas, deltas, rate, -1);
 
     initialized = true;
 }

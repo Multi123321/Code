@@ -20,7 +20,7 @@ class FXrateTrading
 
   public:
     FXrateTrading();
-    FXrateTrading(string rate, int nbOfCoastTraders, double deltas[]);
+    FXrateTrading(string rate, int nbOfCoastTraders, __m256d &deltas);
 
     bool runTradingAsymm(PriceFeedData::Price price);
     bool printDataAsymm(double time);
