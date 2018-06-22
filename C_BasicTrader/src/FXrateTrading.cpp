@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <x86intrin.h>
 
 typedef unsigned int uint;
 
@@ -19,35 +20,36 @@ FXrateTrading::FXrateTrading()
 FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
 {
     currentTime = 0;
-    oneDay = 24.0*60.0*60.0*1000.0;
+    oneDay = 24.0 * 60.0 * 60.0 * 1000.0;
     FXrate = string(rate);
 
     printDataHeader();
 
-    coastTraderLong.resize(nbOfCoastTraders);
-    coastTraderShort.resize(nbOfCoastTraders);
-    
-    for( uint i = 0; i < coastTraderLong.size(); ++i )
+    if (nbOfCoastTraders != 4)
     {
-        coastTraderLong[i]  = CoastlineTrader(deltas[i], deltas[i], deltas[i], deltas[i], rate,  1);
-        coastTraderShort[i] = CoastlineTrader(deltas[i], deltas[i], deltas[i], deltas[i], rate, -1);
+        cout << "Must be 4 traders because of AVX";
+        exit(EXIT_FAILURE);
     }
+
+    __m256d delta256 = _mm256_loadu_pd(deltas);
+
+    coastTraderLong = CoastlineTrader(delta256, delta256, delta256, delta256, rate, 1);
+    coastTraderShort = CoastlineTrader(delta256, delta256, delta256, delta256, rate, -1);
+
     initialized = true;
 }
 
 bool FXrateTrading::runTradingAsymm(PriceFeedData::Price price)
 {
-    for( uint i = 0; i < coastTraderLong.size(); ++i )
+
+    coastTraderLong.runPriceAsymm(price, coastTraderShort.tP);
+    coastTraderShort.runPriceAsymm(price, coastTraderLong.tP);
+
+    if (price.time >= currentTime + oneDay)
     {
-        coastTraderLong[i].runPriceAsymm(price, coastTraderShort[i].tP);
-        coastTraderShort[i].runPriceAsymm(price, coastTraderLong[i].tP);
-    }
-    
-    if( price.time >= currentTime + oneDay )
-    {
-        while( currentTime <= price.time )
+        while (currentTime <= price.time)
             currentTime += oneDay;
-        
+
         IFDEBUG(printDataAsymm(currentTime));
     }
     return true;
@@ -57,40 +59,37 @@ bool FXrateTrading::printDataHeader()
 {
     ofstream outputFile;
     functions::openOutputFile(outputFile, config::configValues["outputDir"], "DataAsymmLiq.csv");
-    
+
     outputFile << "time, totalPnl, totalPnlPerc, totalPos, totalLong, totalShort, price" << endl;
     outputFile.close();
 
     return true;
 }
 
-
 bool FXrateTrading::printDataAsymm(double time)
 {
     ofstream outputFile;
     functions::openOutputFile(outputFile, config::configValues["outputDir"], "DataAsymmLiq.csv", ofstream::app);
-    
-    double totalPos = 0.0, totalShort = 0.0, totalLong = 0.0; 
-    double totalPnl = 0.0; 
-    double totalPnlPerc = 0.0;  
+
+    double totalPos = 0.0, totalShort = 0.0, totalLong = 0.0;
+    double totalPnl = 0.0;
+    double totalPnlPerc = 0.0;
     double price = -1.0;
-    for( uint i = 0; i < coastTraderLong.size(); ++i )
+    for (uint i = 0; i < coastTraderLong.size(); ++i)
     {
-        if( i == 0 )
+        if (i == 0)
         {
             price = coastTraderLong[i].lastPrice;
         }
         totalLong += coastTraderLong[i].tP;
         totalShort += coastTraderShort[i].tP;
         totalPos += (coastTraderLong[i].tP + coastTraderShort[i].tP);
-        totalPnl += (coastTraderLong[i].pnl + coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice()
-                + coastTraderShort[i].pnl + coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice());
-        totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice())/coastTraderLong[i].cashLimit*coastTraderLong[i].profitTarget
-                + coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice())/coastTraderShort[i].cashLimit*coastTraderShort[i].profitTarget);
+        totalPnl += (coastTraderLong[i].pnl + coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice() + coastTraderShort[i].pnl + coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice());
+        totalPnlPerc += (coastTraderLong[i].pnlPerc + (coastTraderLong[i].tempPnl + coastTraderLong[i].computePnlLastPrice()) / coastTraderLong[i].cashLimit * coastTraderLong[i].profitTarget + coastTraderShort[i].pnlPerc + (coastTraderShort[i].tempPnl + coastTraderShort[i].computePnlLastPrice()) / coastTraderShort[i].cashLimit * coastTraderShort[i].profitTarget);
     }
-    outputFile << ((((long)time/3600000)/24)+25569) << "," << totalPnl << "," << totalPnlPerc << "," << totalPos << "," << totalLong << "," << totalShort << "," << price << endl;
-    
+    outputFile << ((((long)time / 3600000) / 24) + 25569) << "," << totalPnl << "," << totalPnlPerc << "," << totalPos << "," << totalLong << "," << totalShort << "," << price << endl;
+
     outputFile.close();
-    
+
     return true;
 }
