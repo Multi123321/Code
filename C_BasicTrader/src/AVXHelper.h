@@ -50,18 +50,6 @@ inline __m256d AVXHelper::applyMask(__m256d value, __m256d mask)
 inline __m256d AVXHelper::setValues(__m256d input, double value, __m256d mask)
 {
     return setValues(input, _mm256_set1_pd(value), mask);
-    // __m256d result;
-
-    // __m256d maskInverted = _mm256_and_pd(mask, _mm256_setzero_pd());
-
-    // __m256d removedPositionsWithNewValue = _mm256_and_pd(maskInverted, input);
-
-    // double newValueArray[4] = {value, value, value, value};
-    // __m256d newValueM256 = _mm256_maskload_pd(newValueArray, mask);
-
-    // result = _m256_add_pd(removedPositionsWithNewValue, newValueM256);
-
-    // return result;
 }
 
 inline __m256i setValues(__m256i input, long value, __m256d mask)
