@@ -11,6 +11,7 @@ class AVXHelper
   public:
     static inline __m256d setValues(__m256d input, double value, __m256d mask);
     static inline __m256d applyMask(__m256d value, __m256d mask);
+    static inline __m256d invert(__m256d value);
 };
 
 inline __m256d AVXHelper::applyMask(__m256d value, __m256d mask)
@@ -22,7 +23,7 @@ inline __m256d AVXHelper::setValues(__m256d input, double value, __m256d mask)
 {
     __m256d result;
 
-    __m256d maskInverted = _mm256_and_pd(mask, _mm256_setzero_pd());
+    __m256d maskInverted = invert(mask);
 
     __m256d removedPositionsWithNewValue = _mm256_and_pd(maskInverted, input);
 
@@ -32,6 +33,11 @@ inline __m256d AVXHelper::setValues(__m256d input, double value, __m256d mask)
     result = _m256_add_pd(removedPositionsWithNewValue, newValueM256);
 
     return result;
+}
+
+inline __m256d AVXHelper::invert(__m256d value)
+{
+    return _mm256_and_pd(value, _mm256_setzero_pd());
 }
 
 #endif
