@@ -6,8 +6,6 @@
 #include <string>
 #include <x86intrin.h>
 
-//using namespace AVXHelper
-
 Runner::Runner()
 {
 }
@@ -62,7 +60,7 @@ __m256d Runner::run(PriceFeedData::Price price)
     // if( &price == NULL )
     //     return 0;
 
-    __m256d returnValues = _mm256_setzero_pd();
+    __m256d returnValues = 0x0000000000000000;
 
     if (!initalized)
     {
@@ -80,33 +78,54 @@ __m256d Runner::run(PriceFeedData::Price price)
         return returnValues;
     }
 
-    __m256d mask1 = _mm256_cmp_pd(type, _mm256_set1_pd(-1), _CMP_EQ_OS); /* if (type == -1) */
+    /* ########## Set Masks ########## */
 
-    __m256d mask1not = _mm256_and_pd(mask1, _mm256_set1_pd(0));
-    __m256d mask2 = _mm256_mul_pd(_mm256_cmp_pd(type, _mm256_set1_pd(1), _CMP_EQ_OS), mask1not); /* else if (type == 1) */
+    /* if (type == -1) */
+    __m256d mask1 = _mm256_cmp_pd(type, _mm256_set1_pd(-1), _CMP_EQ_OS);
 
+    /*     if (log(price.bid / extreme) >= deltaUp) */
     __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.bid), extreme);
     AVXHelper::avxLogDouble(tmp);
-    __m256d mask11 = _mm256_cmp_pd(tmp, deltaUp, _CMP_GE_OS); /* if (log(price.bid / extreme) >= deltaUp) */
-
-    __m256d mask12 = _mm256_cmp_pd(_mm256_set1_pd(price.ask), extreme, _CMP_LT_OS); /* if (price.ask < extreme) */
-
-    tmp = _mm256_div_pd(extreme, reference);
-    AVXHelper::avxLogDouble(tmp);
-    __m256d mask121 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaStarUp, _mm256_set1_pd(-1.0)), _CMP_LE_OS); /* if (log(extreme / reference) <= -deltaStarUp) */
-
-    tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
-    AVXHelper::avxLogDouble(tmp);
-    __m256d mask21 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaDown, _mm256_set1_pd(-1.0)), _CMP_LE_OS); /* if (log(price.ask / extreme) <= -deltaDown) */
-
-    __m256d mask22 = _mm256_cmp_pd(_mm256_set1_pd(price.bid), extreme, _CMP_GT_OS); /* if (price.bid > extreme) */
-
-    tmp = _mm256_div_pd(extreme, reference);
-    AVXHelper::avxLogDouble(tmp);
-    __m256d mask221 = _mm256_cmp_pd(tmp, deltaStarDown, _CMP_GE_OS); /* if (log(extreme / reference) >= deltaStarDown) */
-
+    __m256d mask11 = _mm256_cmp_pd(tmp, deltaUp, _CMP_GE_OS);
     mask11 = _mm256_and_pd(mask11, mask1);
 
+    /*     if (price.ask < extreme) */
+    __m256d mask12 = _mm256_cmp_pd(_mm256_set1_pd(price.ask), extreme, _CMP_LT_OS);
+    mask12 = _mm256_and_pd(mask12, mask1);
+
+    /*         if (log(extreme / reference) <= -deltaStarUp) */
+    tmp = _mm256_div_pd(extreme, reference);
+    AVXHelper::avxLogDouble(tmp);
+    __m256d mask121 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaStarUp, _mm256_set1_pd(-1.0)), _CMP_LE_OS);
+    mask121 = _mm256_and_pd(mask121, mask12);
+
+    /* else if (type == 1) */
+    __m256d mask1else = _mm256_and_pd(mask1, _mm256_set1_pd(0));
+    __m256d mask2 = _mm256_mul_pd(_mm256_cmp_pd(type, _mm256_set1_pd(1), _CMP_EQ_OS), mask1else); /* else if (type == 1) */
+
+    /*     if (log(price.ask / extreme) <= -deltaDown) */
+    tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
+    AVXHelper::avxLogDouble(tmp);
+    __m256d mask21 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaDown, _mm256_set1_pd(-1.0)), _CMP_LE_OS);
+    mask21 = _mm256_and_pd(mask21, mask2);
+
+    /*     if (price.bid > extreme) */
+    __m256d mask22 = _mm256_cmp_pd(_mm256_set1_pd(price.bid), extreme, _CMP_GT_OS);
+    mask22 = _mm256_and_pd(mask22, mask2);
+
+    /*         if (log(extreme / reference) >= deltaStarDown) */
+    tmp = _mm256_div_pd(extreme, reference);
+    AVXHelper::avxLogDouble(tmp);
+    __m256d mask221 = _mm256_cmp_pd(tmp, deltaStarDown, _CMP_GE_OS);
+    mask221 = _mm256_and_pd(mask221, mask22);
+
+    /* else */
+    //__m256d mask3 = _mm256_and_pd(mask1, mask2);
+
+    /* ########## Execute Code ########## */
+
+    /* if (type == -1) */
+    /*     if (log(price.bid / extreme) >= deltaUp) */
     prevExtreme = AVXHelper::setValues(prevExtreme, extreme, mask11);             /* prevExtreme = extreme; */
     prevExtremeTime = AVXHelper::setValues(prevExtremeTime, extremeTime, mask11); /* prevExtremeTime = extremeTime; */
     type = AVXHelper::setValues(type, 1.0, mask11);                               /* type = 1; */
@@ -117,21 +136,22 @@ __m256d Runner::run(PriceFeedData::Price price)
     reference = AVXHelper::setValues(reference, price.ask, mask11);               /* reference = price.ask; */
     returnValues = AVXHelper::setValues(returnValues, 1.0, mask11);               /* return 1; */
 
-    mask12 = _mm256_and_pd(mask12, mask1);
+    /*     if (price.ask < extreme) */
     extreme = AVXHelper::setValues(extreme, price.ask, mask12);          /* extreme = price.ask; */
     extremeTime = AVXHelper::setValues(extremeTime, price.time, mask12); /* extremeTime = price.time; */
     tmp = _mm256_div_pd(extreme, prevDC);
     AVXHelper::avxLogDouble(tmp);
     tmp = _mm256_div_pd(tmp, deltaDown);
     tmp = _mm256_mul_pd(tmp, _mm256_set1_pd(-1.0));
-    osL = AVXHelper::setValues(osL, tmp, mask12);                   /* osL = -1 * log(extreme / prevDC) / deltaDown; */
-    returnValues = AVXHelper::setValues(returnValues, 0.0, mask12); /* return 0; */
+    osL = AVXHelper::setValues(osL, tmp, mask12); /* osL = -1 * log(extreme / prevDC) / deltaDown; */
+    //returnValues = AVXHelper::setValues(returnValues, 0.0, mask12); /* return 0; */
 
-    mask121 = _mm256_and_pd(mask121, mask12);
+    /*         if (log(extreme / reference) <= -deltaStarUp) */
     reference = AVXHelper::setValues(reference, extreme, mask121);    /* reference = extreme; */
     returnValues = AVXHelper::setValues(returnValues, -2.0, mask121); /* return -2; */
 
-    mask21 = _mm256_and_pd(mask21, mask2);
+    /* else if (type == 1) */
+    /*     if (log(price.ask / extreme) <= -deltaDown) */
     prevExtreme = AVXHelper::setValues(prevExtreme, extreme, mask21);             /* prevExtreme = extreme; */
     prevExtremeTime = AVXHelper::setValues(prevExtremeTime, extremeTime, mask21); /* prevExtremeTime = extremeTime; */
     type = AVXHelper::setValues(type, -1.0, mask21);                              /* type = -1; */
@@ -142,153 +162,26 @@ __m256d Runner::run(PriceFeedData::Price price)
     reference = AVXHelper::setValues(reference, price.bid, mask21);               /* reference = price.bid; */
     returnValues = AVXHelper::setValues(returnValues, -1.0, mask21);              /* return 1; */
 
-    mask22 = _mm256_and_pd(mask22, mask2);
+    /*     if (price.bid > extreme) */
     extreme = AVXHelper::setValues(extreme, price.bid, mask22);          /* extreme = price.bid; */
     extremeTime = AVXHelper::setValues(extremeTime, price.time, mask22); /* extremeTime = price.time; */
     tmp = _mm256_div_pd(extreme, prevDC);
     AVXHelper::avxLogDouble(tmp);
     tmp = _mm256_div_pd(tmp, deltaUp);
-    osL = AVXHelper::setValues(osL, tmp, mask22);                   /* osL = log(extreme / prevDC) / deltaUp; */
-    returnValues = AVXHelper::setValues(returnValues, 0.0, mask22); /* return 0; */
+    osL = AVXHelper::setValues(osL, tmp, mask22); /* osL = log(extreme / prevDC) / deltaUp; */
+    //returnValues = AVXHelper::setValues(returnValues, 0.0, mask22); /* return 0; */
 
-    mask221 = _mm256_and_pd(mask221, mask22);
+    /*         if (log(extreme / reference) >= deltaStarDown) */
     reference = AVXHelper::setValues(reference, extreme, mask221);   /* reference = extreme; */
-    returnValues = AVXHelper::setValues(returnValues, 2.0, mask221); /* return -2; */
+    returnValues = AVXHelper::setValues(returnValues, 2.0, mask221); /* return 2; */
+
+    /* else */
+    //returnValues = AVXHelper::setValues(returnValues, 0.0, mask3); /* return 0; */
 
     return returnValues;
-    // if (type == -1)
-    // {
-    //     if (log(price.bid / extreme) >= deltaUp)
-    //     {
-    //         prevExtreme = extreme;
-    //         prevExtremeTime = extremeTime;
-    //         type = 1;
-    //         extreme = price.ask;
-    //         extremeTime = price.time;
-    //         prevDC = price.ask;
-    //         prevDCTime = price.time;
-    //         reference = price.ask;
-    //         return 1;
-    //     }
-    //     if (price.ask < extreme)
-    //     {
-    //         extreme = price.ask;
-    //         extremeTime = price.time;
-    //         osL = -1 * log(extreme / prevDC) / deltaDown;
-
-    //         if (log(extreme / reference) <= -deltaStarUp)
-    //         {
-    //             reference = extreme;
-    //             return -2;
-    //         }
-    //         return 0;
-    //     }
-    // }
-    // else if (type == 1)
-    // {
-    //     if (log(price.ask / extreme) <= -deltaDown)
-    //     {
-    //         prevExtreme = extreme;
-    //         prevExtremeTime = extremeTime;
-    //         type = -1;
-    //         extreme = price.bid;
-    //         extremeTime = price.time;
-    //         prevDC = price.bid;
-    //         prevDCTime = price.time;
-    //         reference = price.bid;
-    //         return -1;
-    //     }
-    //     if (price.bid > extreme)
-    //     {
-    //         extreme = price.bid;
-    //         extremeTime = price.time;
-    //         osL = log(extreme / prevDC) / deltaUp;
-
-    //         if (log(extreme / reference) >= deltaStarDown)
-    //         {
-    //             reference = extreme;
-    //             return 2;
-    //         }
-    //         return 0;
-    //     }
-    // }
-    // return 0;
 }
 
-// __m256d Runner::run(double price)
-// {
-//     if (!initalized)
-//     {
-//         type = -1;
-//         osL = 0.0;
-//         initalized = true;
-//         prevExtreme = price;
-//         prevExtremeTime = 0;
-//         prevDC = price;
-//         prevDCTime = 0;
-//         extreme = price;
-//         extremeTime = 0;
-//         reference = price;
-//         return 0;
-//     }
-
-//     if (type == -1)
-//     {
-//         if (price - extreme >= deltaUp)
-//         {
-//             prevExtreme = extreme;
-//             prevExtremeTime = extremeTime;
-//             type = 1;
-//             extreme = price;
-//             extremeTime = 0;
-//             prevDC = price;
-//             prevDCTime = 0;
-//             reference = price;
-//             osL = 0.0;
-
-//             return 1;
-//         }
-//         if (price < extreme)
-//         {
-//             extreme = price;
-//             extremeTime = 0;
-//             osL = -(extreme - prevDC);
-//             if (extreme - reference <= -deltaStarUp)
-//             {
-//                 reference = extreme;
-//                 return -2;
-//             }
-//             return 0;
-//         }
-//     }
-//     else if (type == 1)
-//     {
-//         if (price - extreme <= -deltaDown)
-//         {
-//             prevExtreme = extreme;
-//             prevExtremeTime = extremeTime;
-//             type = -1;
-//             extreme = price;
-//             extremeTime = 0;
-//             prevDC = price;
-//             prevDCTime = 0;
-//             reference = price;
-//             osL = 0.0;
-
-//             return 1;
-//         }
-//         if (price > extreme)
-//         {
-//             extreme = price;
-//             extremeTime = 0;
-//             osL = (extreme - prevDC);
-//             if (extreme - reference >= deltaStarDown)
-//             {
-//                 reference = extreme;
-//                 return 2;
-//             }
-//             return 0;
-//         }
-//     }
-//     return 0;
-// }
+__m256d Runner::run(double price)
+{
+    return run(PriceFeedData::Price(price, price, 0));
+}
