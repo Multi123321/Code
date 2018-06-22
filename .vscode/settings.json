@@ -109,5 +109,7 @@
         "__nullptr": "cpp",
         "string_view": "cpp",
         "iostream": "cpp"
-    }
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
 }
