@@ -91,6 +91,42 @@
             "cStandard": "c11",
             "cppStandard": "c++17",
             "compilerPath": "/usr/bin/gcc"
+        },
+        {
+            "name": "WSL",
+            "intelliSenseMode": "clang-x64",
+            "includePath": [
+                "${workspaceFolder}",
+                "/mnt/c/libraries/lib1/include",
+                "C:/libraries/lib2/include",
+                "${localappdata}/lxss/rootfs/usr/include/c++/4.8",
+                "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu/c++/4.8",
+                "${localappdata}/lxss/rootfs/usr/include/c++/4.8/backward",
+                "${localappdata}/lxss/rootfs/usr/lib/gcc/x86_64-linux-gnu/4.8/include",
+                "${localappdata}/lxss/rootfs/usr/local/include",
+                "${localappdata}/lxss/rootfs/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed",
+                "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu",
+                "${localappdata}/lxss/rootfs/usr/include"
+            ],
+            "defines": [],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "/mnt/c/libraries",
+                    "${localappdata}/lxss/rootfs/usr/include/c++/4.8",
+                    "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu/c++/4.8",
+                    "${localappdata}/lxss/rootfs/usr/lib/gcc/x86_64-linux-gnu/4.8/include",
+                    "${localappdata}/lxss/rootfs/usr/local/include",
+                    "${localappdata}/lxss/rootfs/usr/lib/gcc/x86_64-linux-gnu/4.8/include-fixed",
+                    "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu",
+                    "${localappdata}/lxss/rootfs/usr/include/*"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "compilerPath": "/usr/bin/gcc"
         }
     ],
     "version": 4
