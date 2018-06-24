@@ -5,9 +5,10 @@
 #include <cmath>
 #include <stdlib.h>
 #include <assert.h>
+#include <x86intrin.h>
+
 #include "helper/Macros.h"
 #include "AVXHelper.h"
-#include <x86intrin.h>
 
 typedef unsigned int uint;
 
@@ -40,7 +41,7 @@ __m256d CoastlineTrader::computePnl(PriceFeedData::Price price)
     for (int avx = 0; avx < 4; avx++)
     {
         double profitLoss = 0.0;
-        double pricE = (tP > 0.0 ? price.bid : price.ask);
+        double pricE = (((double *)&tP)[avx] > 0.0 ? price.bid : price.ask);
         for (uint i = 0; i < sizes[avx].size(); i++)
         {
             profitLoss += sizes[avx][i] * (pricE - prices[avx][i]);
@@ -131,10 +132,10 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
 
 void CoastlineTrader::assignCashTarget()
 {
-    cashLimit = _mm256_mul_pd(lastPrice, profitTarget);
+    cashLimit = _mm256_mul_pd(_mm256_set1_pd(lastPrice), profitTarget);
 }
 
-mask CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv)
+bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv)
 {
     if (!initalized)
     {
