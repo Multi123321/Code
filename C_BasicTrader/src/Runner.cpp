@@ -60,7 +60,7 @@ __m256d Runner::run(PriceFeedData::Price price)
     // if( &price == NULL )
     //     return 0;
 
-    __m256d returnValues = 0x0000000000000000;
+    __m256d returnValues = _mm256_set1_pd(0.0);
 
     if (!initalized)
     {
