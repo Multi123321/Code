@@ -13,7 +13,7 @@
 
 using namespace std;
 
-int readExchangeFromFile(PriceFeedData &prices, string filepath)
+int CSVReader::readExchangeFromFile(PriceFeedData &prices, string filepath)
 {
     string csvFile = filepath;
     string line;

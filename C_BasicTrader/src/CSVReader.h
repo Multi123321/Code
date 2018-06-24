@@ -14,8 +14,8 @@
 
 class CSVReader
 {
-  public:
-    static int readExchangeFromFile(PriceFeedData &prices, string filepath);
+public:
+  static int readExchangeFromFile(PriceFeedData &prices, std::string filepath);
 };
 
 #endif
