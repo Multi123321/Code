@@ -85,7 +85,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /*     if (log(price.bid / extreme) >= deltaUp) */
     __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.bid), extreme);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     __m256d mask11 = _mm256_cmp_pd(tmp, deltaUp, _CMP_GE_OS);
     mask11 = _mm256_and_pd(mask11, mask1);
 
@@ -95,7 +95,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /*         if (log(extreme / reference) <= -deltaStarUp) */
     tmp = _mm256_div_pd(extreme, reference);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     __m256d mask121 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaStarUp, _mm256_set1_pd(-1.0)), _CMP_LE_OS);
     mask121 = _mm256_and_pd(mask121, mask12);
 
@@ -105,7 +105,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /*     if (log(price.ask / extreme) <= -deltaDown) */
     tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     __m256d mask21 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaDown, _mm256_set1_pd(-1.0)), _CMP_LE_OS);
     mask21 = _mm256_and_pd(mask21, mask2);
 
@@ -115,7 +115,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /*         if (log(extreme / reference) >= deltaStarDown) */
     tmp = _mm256_div_pd(extreme, reference);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     __m256d mask221 = _mm256_cmp_pd(tmp, deltaStarDown, _CMP_GE_OS);
     mask221 = _mm256_and_pd(mask221, mask22);
 
@@ -140,7 +140,7 @@ __m256d Runner::run(PriceFeedData::Price price)
     extreme = AVXHelper::setValues(extreme, price.ask, mask12);          /* extreme = price.ask; */
     extremeTime = AVXHelper::setValues(extremeTime, price.time, mask12); /* extremeTime = price.time; */
     tmp = _mm256_div_pd(extreme, prevDC);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     tmp = _mm256_div_pd(tmp, deltaDown);
     tmp = _mm256_mul_pd(tmp, _mm256_set1_pd(-1.0));
     osL = AVXHelper::setValues(osL, tmp, mask12); /* osL = -1 * log(extreme / prevDC) / deltaDown; */
@@ -166,7 +166,7 @@ __m256d Runner::run(PriceFeedData::Price price)
     extreme = AVXHelper::setValues(extreme, price.bid, mask22);          /* extreme = price.bid; */
     extremeTime = AVXHelper::setValues(extremeTime, price.time, mask22); /* extremeTime = price.time; */
     tmp = _mm256_div_pd(extreme, prevDC);
-    AVXHelper::avxLogDouble(tmp);
+    tmp = AVXHelper::avxLogDouble(tmp);
     tmp = _mm256_div_pd(tmp, deltaUp);
     osL = AVXHelper::setValues(osL, tmp, mask22); /* osL = log(extreme / prevDC) / deltaUp; */
     //returnValues = AVXHelper::setValues(returnValues, 0.0, mask22); /* return 0; */
