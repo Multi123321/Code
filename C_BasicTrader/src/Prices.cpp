@@ -1,15 +1,16 @@
 #include "Prices.h"
 
 Prices::Prices()
-{}
+{
+}
 
-Prices::Prices(double bidArg, double askArg) : 
-    bid(bidArg), ask(askArg)
-{}
+Prices::Prices(double bidArg, double askArg) : bid(bidArg), ask(askArg)
+{
+}
 
-Prices::Prices(const Prices& p) :
-    bid(p.bid), ask(p.ask)
-{}
+Prices::Prices(const Prices &p) : bid(p.bid), ask(p.ask)
+{
+}
 
 double Prices::getAsk()
 {

@@ -3,14 +3,13 @@
 
 class HelpClass
 {
-public:
+  public:
     long time;
     double price;
     double liq;
-    
+
     HelpClass();
     HelpClass(long time, double price, double liq);
-
 };
 
 #endif

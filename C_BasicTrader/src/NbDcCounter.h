@@ -7,17 +7,17 @@
 
 class NbDcCounter
 {
-private:
+  private:
 	std::list<long> eventList;
 	double delta;
 	long timeWindow;
 	Runner runner;
-public:
-    
-    NbDcCounter();
-    NbDcCounter(double delta, long timeWindow);
-    
-    bool run(PriceFeedData::Price price);
+
+  public:
+	NbDcCounter();
+	NbDcCounter(double delta, long timeWindow);
+
+	bool run(PriceFeedData::Price price);
 };
 
 #endif

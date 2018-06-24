@@ -4,33 +4,30 @@
 #include <chrono>
 #include <list>
 
-
 class PriceFeedData
 {
-public:
+  public:
     class Price
     {
-        public:
-            double mid;
-            double ask;
-            double bid;
-            long time;
+      public:
+        double mid;
+        double ask;
+        double bid;
+        long time;
 
-            Price(double ask, double bid, long time);
-            
-            double getAsk();
-            double getBid();
-            double getMid();
-            long getTime();
+        Price(double ask, double bid, long time);
+
+        double getAsk();
+        double getBid();
+        double getMid();
+        long getTime();
     };
 
     std::list<Price> priceFeed;
-    
+
     void addPrice(double ask, double bid, long time);
-    
-    PriceFeedData();    
+
+    PriceFeedData();
 };
-
-
 
 #endif
