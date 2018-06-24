@@ -2,40 +2,41 @@
 #define AVX_HELPER_H
 
 #include <x86intrin.h>
-#include <avxintrin.h>
-#include <immintrin.h>
 #include <math.h>
 
-namespace AVXHelper
+class AVXHelper
 {
-extern __m256d avx256dOne = _mm256_set1_pd(1.0);
-extern __m256d avx256dNegOne = _mm256_set1_pd(-1.0);
-extern __m256d avx256dZero = _mm256_setzero_pd();
+  private:
+    AVXHelper(){};
 
-static inline __m256d setValues(__m256d input, double value, __m256d mask);
-static inline __m256i setValues(__m256i input, long value, __m256d mask);
-static inline __m256d setValues(__m256d original, __m256d newValues, __m256d mask);
-static inline __m256i setValues(__m256i original, __m256i newValues, __m256d mask);
-static inline __m256d addMasked(__m256d summand1, double summand2, __m256d mask);
-static inline __m256d addMasked(__m256d summand1, __m256d summand2, __m256d mask);
-static inline __m256d multiply(__m256d first, __m256d second, __m256d third);
-static inline __m256d multiply(__m256d first, __m256d second, __m256d third, __m256d forth);
-static inline __m256d applyMask(__m256d value, __m256d mask);
-static inline __m256d invert(__m256d value);
-static inline __m256d avxLogDouble(__m256d input);
-static inline __m256d avxExpDouble(__m256d input);
-static inline __m256d avxPowDouble(__m256d input, double power);
-static inline double verticalSum(__m256d value);
-}; // namespace AVXHelper
+  public:
+    static constexpr __m256d avxOne = {1, 1, 1, 1};
+    static constexpr __m256d avxNegOne = {-1, -1, -1, -1};
+    static constexpr __m256d avxZero = {0, 0, 0, 0};
+    static inline __m256d setValues(__m256d input, double value, __m256d maskArg);
+    static inline __m256i setValues(__m256i input, long value, __m256d maskArg);
+    static inline __m256d setValues(__m256d original, __m256d newValues, __m256d maskArg);
+    static inline __m256i setValues(__m256i original, __m256i newValues, __m256d maskArg);
+    static inline __m256d addMasked(__m256d summand1, double summand2, __m256d maskArg);
+    static inline __m256d addMasked(__m256d summand1, __m256d summand2, __m256d maskArg);
+    static inline __m256d multiply(__m256d first, __m256d second, __m256d third);
+    static inline __m256d multiply(__m256d first, __m256d second, __m256d third, __m256d forth);
+    static inline __m256d applyMask(__m256d value, __m256d maskArg);
+    static inline __m256d invert(__m256d value);
+    static inline __m256d avxLogDouble(__m256d input);
+    static inline __m256d avxExpDouble(__m256d input);
+    static inline __m256d avxPowDouble(__m256d input, double power);
+    static inline double verticalSum(__m256d value);
+};
 
-inline __m256d AVXHelper::addMasked(__m256d summand1, double summand2, __m256d mask)
+inline __m256d AVXHelper::addMasked(__m256d summand1, double summand2, __m256d maskArg)
 {
-    return addMasked(summand1, _mm256_set1_pd(summand2), mask);
+    return addMasked(summand1, _mm256_set1_pd(summand2), maskArg);
 }
 
-inline __m256d AVXHelper::addMasked(__m256d summand1, __m256d summand2, __m256d mask)
+inline __m256d AVXHelper::addMasked(__m256d summand1, __m256d summand2, __m256d maskArg)
 {
-    return _mm256_add_pd(summand1, applyMask(summand2, mask));
+    return _mm256_add_pd(summand1, applyMask(summand2, maskArg));
 }
 
 inline __m256d AVXHelper::multiply(__m256d first, __m256d second, __m256d third)
@@ -48,29 +49,29 @@ inline __m256d AVXHelper::multiply(__m256d first, __m256d second, __m256d third,
     return _mm256_mul_pd(first, _mm256_mul_pd(second, _mm256_mul_pd(third, forth)));
 }
 
-inline __m256d AVXHelper::applyMask(__m256d value, __m256d mask)
+inline __m256d AVXHelper::applyMask(__m256d value, __m256d maskArg)
 {
-    return _mm256_and_pd(value, mask);
+    return _mm256_and_pd(value, maskArg);
 }
 
-inline __m256d AVXHelper::setValues(__m256d input, double value, __m256d mask)
+inline __m256d AVXHelper::setValues(__m256d input, double value, __m256d maskArg)
 {
-    return setValues(input, _mm256_set1_pd(value), mask);
+    return setValues(input, _mm256_set1_pd(value), maskArg);
 }
 
-inline __m256i setValues(__m256i input, long value, __m256d mask)
+inline __m256i AVXHelper::setValues(__m256i input, long value, __m256d maskArg)
 {
-    return setValues(input, _mm256_set1_epi64x(value), mask);
+    return setValues(input, _mm256_set1_epi64x(value), maskArg);
 }
 
-inline __m256d AVXHelper::setValues(__m256d original, __m256d newValues, __m256d mask)
+inline __m256d AVXHelper::setValues(__m256d original, __m256d newValues, __m256d maskArg)
 {
-    return _mm256_blendv_pd(original, newValues, mask);
+    return _mm256_blendv_pd(original, newValues, maskArg);
 }
 
-inline __m256i AVXHelper::setValues(__m256i original, __m256i newValues, __m256d mask)
+inline __m256i AVXHelper::setValues(__m256i original, __m256i newValues, __m256d maskArg)
 {
-    return _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(original), _mm256_castsi256_pd(newValues), mask));
+    return _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(original), _mm256_castsi256_pd(newValues), maskArg));
 }
 
 inline __m256d AVXHelper::avxLogDouble(__m256d input)
@@ -93,7 +94,7 @@ inline __m256d AVXHelper::avxExpDouble(__m256d input)
     return output;
 }
 
-inline __m256d avxPowDouble(__m256d input, double power)
+inline __m256d AVXHelper::avxPowDouble(__m256d input, double power)
 {
     __m256d output;
     if (power == 2.0)
@@ -106,8 +107,8 @@ inline __m256d avxPowDouble(__m256d input, double power)
         {
             ((double *)&output)[i] = pow(((double *)&input)[i], power);
         }
-        return output;
     }
+    return output;
 }
 
 inline double AVXHelper::verticalSum(__m256d value)
