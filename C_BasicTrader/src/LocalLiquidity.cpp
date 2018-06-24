@@ -3,6 +3,8 @@
 #include "LocalLiquidity.h"
 #include "PriceFeedData.h"
 #include "AVXHelper.h"
+
+#include <x86intrin.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -14,7 +16,7 @@ LocalLiquidity::LocalLiquidity()
 
 LocalLiquidity::LocalLiquidity(__m256d deltaArg, __m256d deltaUpArg, __m256d deltaDownArg, __m256d dStarArg, double alphaArg) : deltaUp(deltaUpArg), deltaDown(deltaDownArg), delta(deltaArg), dStar(dStarArg), alpha(alphaArg)
 {
-    type = _mm_set1_epi32(-1);
+    type = _mm256_set1_pd(-1);
     initalized = false;
     alphaWeight = exp(-2.0 / (alpha + 1.0));
     computeH1H2exp(dStar);
@@ -28,7 +30,7 @@ LocalLiquidity::LocalLiquidity(__m256d deltaArg, __m256d deltaUpArg, __m256d del
 
 LocalLiquidity::LocalLiquidity(__m256d deltaArg, __m256d deltaUpArg, __m256d deltaDownArg, PriceFeedData::Price priceArg, __m256d dStarArg, double alphaArg) : deltaUp(deltaUpArg), deltaDown(deltaDownArg), delta(deltaArg), dStar(dStarArg), alpha(alphaArg)
 {
-    type = _mm_set1_epi32(-1);
+    type = _mm256_set1_pd(-1);
     extreme = reference = _mm256_set1_pd(priceArg.mid);
     initalized = true;
     alphaWeight = exp(-2.0 / (alpha + 1.0));
@@ -45,11 +47,11 @@ bool LocalLiquidity::computeH1H2exp(__m256d dS)
 {
     UNUSED(dS);
     // exp(-dStar / delta)
-    __m256d expDStarDivDelta = AVXHelper::avxExpDouble(_mm256_div_pd(_mm256_mul_pd(dStar, -1.0), delta));
+    __m256d expDStarDivDelta = AVXHelper::avxExpDouble(_mm256_div_pd(_mm256_mul_pd(dStar, AVXHelper::avxNegOne), delta));
     // (1.0 - exp(-dStar / delta))
     __m256d oneMinusExpDStarDivDelta = _mm256_sub_pd(_mm256_set1_pd(1.0), expDStarDivDelta);
     // H1 = -1 * exp(-dStar / delta) * log(exp(-dStar / delta)) - (1.0 - exp(-dStar / delta)) * log(1.0 - exp(-dStar / delta));
-    H1 = _mm256_mul_pd(_mm256_mul_pd(expDStarDivDelta, -1.0), AVXHelper::avxLogDouble(expDStarDivDelta));
+    H1 = _mm256_mul_pd(_mm256_mul_pd(expDStarDivDelta, AVXHelper::avxNegOne), AVXHelper::avxLogDouble(expDStarDivDelta));
     H1 = _mm256_add_pd(H1, _mm256_mul_pd(oneMinusExpDStarDivDelta, AVXHelper::avxLogDouble(oneMinusExpDStarDivDelta)));
     // H2 = exp(-dStar / delta) * pow(log(exp(-dStar / delta)), 2.0) - (1.0 - exp(-dStar / delta)) * pow(log(1.0 - exp(-dStar / delta)), 2.0) - H1 * H1;
     H2 = _mm256_mul_pd(expDStarDivDelta, AVXHelper::avxPowDouble(AVXHelper::avxLogDouble(expDStarDivDelta), 2.0));
@@ -61,7 +63,7 @@ bool LocalLiquidity::computeH1H2exp(__m256d dS)
 // Another implementation of the CNDF for a standard normal: N(0,1)
 __m256d LocalLiquidity::CumNorm(__m256d x)
 {
-    __m256d returnValues = 0x0000000000000000;
+    __m256d returnValues = AVXHelper::avxZero;
 
     // protect against overflow
     // if (x >  6.0)
@@ -88,7 +90,7 @@ __m256d LocalLiquidity::CumNorm(__m256d x)
     __m256d a = AVXHelper::setValues(restX, negatedX, maskSmallerThan0);
 
     // double t = 1.0 / (1.0 + a * p);
-    __m256d t = _mm256_div_pd(AVXHelper::avx256dOne, _mm256_add_pd(AVXHelper::avx256dOne, _mm256_mul_pd(a, p)));
+    __m256d t = _mm256_div_pd(AVXHelper::avxOne, _mm256_add_pd(AVXHelper::avxOne, _mm256_mul_pd(a, p)));
 
     // double b = c2 * exp((-x) * (x / 2.0));
     __m256d b = _mm256_mul_pd(c2, AVXHelper::avxExpDouble(_mm256_mul_pd(negatedX, _mm256_div_pd(restX, _mm256_set1_pd(2.0)))));
@@ -97,26 +99,26 @@ __m256d LocalLiquidity::CumNorm(__m256d x)
     __m256d n = _mm256_mul_pd(_mm256_add_pd(_mm256_mul_pd(_mm256_add_pd(_mm256_mul_pd(_mm256_add_pd(_mm256_mul_pd(_mm256_add_pd(_mm256_mul_pd(b5, t), b4), t), b3), t), b2), t), b1), t);
 
     // n = 1.0 - b * n;
-    n = _mm256_sub_pd(AVXHelper::avx256dOne, _mm256_mul_pd(b, n));
+    n = _mm256_sub_pd(AVXHelper::avxOne, _mm256_mul_pd(b, n));
 
     // if (x < 0.0)
     //     n = 1.0 - n;
-    n = AVXHelper::setValues(n, _mm256_sub_pd(AVXHelper::avx256dOne, n), maskSmallerThan0);
+    n = AVXHelper::setValues(n, _mm256_sub_pd(AVXHelper::avxOne, n), maskSmallerThan0);
 
     returnValues = n;
-    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avx256dOne, maskOverflow);
-    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avx256dZero, maskOverflow);
+    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxOne, maskOverflow);
+    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxZero, maskOverflow);
 
     return returnValues;
 }
 
 __m256d LocalLiquidity::run(PriceFeedData::Price price)
 {
-    __m256d returnValues = 0x0000000000000000;
+    __m256d returnValues = AVXHelper::avxZero;
 
     if (!initalized)
     {
-        type = -1;
+        type = AVXHelper::avxNegOne;
         initalized = true;
         extreme = reference = _mm256_set1_pd(price.mid);
         return returnValues;
@@ -143,7 +145,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
 
     /* else if (type == 1) */
     __m256d mask1else = AVXHelper::invert(mask1);
-    __m256d mask2 = _mm256_mul_pd(_mm256_cmp_pd(type, AVXHelper::avx256dOne, _CMP_EQ_OS), mask1else);
+    __m256d mask2 = _mm256_mul_pd(_mm256_cmp_pd(type, AVXHelper::avxOne, _CMP_EQ_OS), mask1else);
 
     /*     if (log(price.ask / extreme) <= -deltaDown) */
     tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
@@ -158,15 +160,15 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
     /*     if (log(reference / extreme) <= -dStar) */
     tmp = _mm256_div_pd(reference, extreme);
     tmp = AVXHelper::avxLogDouble(tmp);
-    __m256d mask23 = _mm256_cmp_pd(tmp, _mm256_mul_pd(dStar, AVXHelper::avx256dNegOne), _CMP_LE_OS);
+    __m256d mask23 = _mm256_cmp_pd(tmp, _mm256_mul_pd(dStar, AVXHelper::avxNegOne), _CMP_LE_OS);
     mask23 = _mm256_and_pd(mask23, mask2);
 
     /* if (type == -1) */
     /*     if (log(price.bid / extreme) >= deltaUp) */
-    type = AVXHelper::setValues(type, AVXHelper::avx256dOne, mask11);                 /*type = 1; */
-    extreme = AVXHelper::setValues(extreme, price.ask, mask11);                       /* extreme = price.ask; */
-    reference = AVXHelper::setValues(reference, price.ask, mask11);                   /* reference = price.ask; */
-    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avx256dOne, mask11); /* return 1; */
+    type = AVXHelper::setValues(type, AVXHelper::avxOne, mask11);                 /*type = 1; */
+    extreme = AVXHelper::setValues(extreme, price.ask, mask11);                   /* extreme = price.ask; */
+    reference = AVXHelper::setValues(reference, price.ask, mask11);               /* reference = price.ask; */
+    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxOne, mask11); /* return 1; */
     /*     if (price.ask < extreme) */
     extreme = AVXHelper::setValues(extreme, price.ask, mask12); /* extreme = price.ask; */
     /*     if (log(reference / extreme) >= dStar) */
@@ -174,10 +176,10 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
     returnValues = AVXHelper::setValues(returnValues, 2.0, mask11); /* return 2; */
     /* else if (type == 1) */
     /*     if (log(price.ask / extreme) <= -deltaDown) */
-    type = AVXHelper::setValues(type, AVXHelper::avx256dNegOne, mask21);                 /* type = -1; */
-    extreme = AVXHelper::setValues(extreme, price.bid, mask21);                          /* extreme = price.bid; */
-    reference = AVXHelper::setValues(reference, price.bid, mask11);                      /* reference = price.bid; */
-    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avx256dNegOne, mask11); /* return -1; */
+    type = AVXHelper::setValues(type, AVXHelper::avxNegOne, mask21);                 /* type = -1; */
+    extreme = AVXHelper::setValues(extreme, price.bid, mask21);                      /* extreme = price.bid; */
+    reference = AVXHelper::setValues(reference, price.bid, mask11);                  /* reference = price.bid; */
+    returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxNegOne, mask11); /* return -1; */
     /*     if (price.bid > extreme) */
     extreme = AVXHelper::setValues(extreme, price.bid, mask22); /* extreme = price.bid; */
     /*     if (log(reference / extreme) <= -dStar) */
@@ -189,7 +191,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
 
 bool LocalLiquidity::computation(PriceFeedData::Price price)
 {
-    __m128i event = run(price);
+    __m256d event = run(price);
 
     //if (event != 0)
     __m256d mask1 = _mm256_cmp_pd(event, _mm256_set1_pd(0.0), _CMP_NEQ_OS);
