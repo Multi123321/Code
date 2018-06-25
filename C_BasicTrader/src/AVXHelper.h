@@ -9,7 +9,7 @@ class AVXHelper
   private:
     AVXHelper(){};
     static constexpr __m256i zeroMask = {0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000};
-    static constexpr __m256i oneMask = {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF};
+    static constexpr __m256i oneMask = {(long long int)0xFFFFFFFFFFFFFFFF, (long long int)0xFFFFFFFFFFFFFFFF, (long long int)0xFFFFFFFFFFFFFFFF, (long long int)0xFFFFFFFFFFFFFFFF};
 
   public:
     static constexpr __m256d avxOne = {1.0, 1.0, 1.0, 1.0};

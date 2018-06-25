@@ -281,7 +281,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         //if (event < 0) -> use maskEventSmallerZero
         if (!AVXHelper::isMaskZero(maskEventSmallerZero))
         {
-            __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
+            __m256d sign = _mm256_mul_pd(runner.type, AVXHelper::avxNegOne);
 
             __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
             maskTpEqualsZero = AVXHelper::applyMask(maskTpEqualsZero, maskEventSmallerZero);
@@ -410,8 +410,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     }
                 }
 
-                __m256d sizeToAdd = _mm256_mul_pd(sign, size);
-                AVXHelper::applyMask(sizeToAdd, maskTpEqualsZero);
+                __m256d sizeToAdd = AVXHelper::setValues(AVXHelper::avxZero, _mm256_mul_pd(sign, size), maskTpEqualsZero);
                 tP = _mm256_add_pd(tP, sizeToAdd);
 
                 SERIAL_AVX(i)
