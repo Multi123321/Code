@@ -22,4 +22,7 @@
 #define IFDEBUG(x) x;
 #endif
 
+#define SERIAL_AVX(x) for (int x = 0; x < 4; x++)
+#define AVX_DOUBLE(x, i) ((double *)&x)[i]
+
 #endif
