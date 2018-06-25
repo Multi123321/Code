@@ -48,7 +48,7 @@ public:
   __m256d computePnlLastPrice();
   __m256d getPercPnl(PriceFeedData::Price price);
   mask tryToClose(PriceFeedData::Price price);
-  void assignCashTarget();
+  void assignCashTarget(__m256d mask);
   bool runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv);
 };
 

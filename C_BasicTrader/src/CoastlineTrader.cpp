@@ -70,10 +70,13 @@ __m256d CoastlineTrader::computePnl(PriceFeedData::Price price)
     {
         double profitLoss = 0.0;
         double pricE = (((double *)&tP)[avx] > 0.0 ? price.bid : price.ask);
+
+        //cout << std::dec << "Line: " << __LINE__ << " " << sizes[avx].size();
         for (uint i = 0; i < sizes[avx].size(); i++)
         {
             profitLoss += sizes[avx][i] * (pricE - prices[avx][i]);
         }
+        //cout << profitLoss << endl;
 
         ((double *)&result)[avx] = profitLoss;
     }
@@ -89,12 +92,12 @@ __m256d CoastlineTrader::computePnlLastPrice()
     SERIAL_AVX(avx)
     {
         double profitLoss = 0.0;
-
+        cout << std::dec << "Line: " << __LINE__ << " " << sizes[avx].size();
         for (uint i = 0; i < sizes[avx].size(); i++)
         {
             profitLoss += sizes[avx][i] * (lastPrice - prices[avx][i]);
         }
-
+        cout << profitLoss << endl;
         ((double *)&result)[avx] = profitLoss;
     }
 
@@ -130,6 +133,7 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
 
     SERIAL_AVX(avx)
     {
+        //cout << ((double *)&tempPnl)[avx] << " " << ((double *)&computedPnl)[avx] << " " << ((double *)&cashLimit)[avx] << endl;
         if ((((double *)&tempPnl)[avx] + ((double *)&computedPnl)[avx]) / ((double *)&cashLimit)[avx] >= 1)
         {
             double pricE = (((double *)&tP)[avx] > 0.0 ? price.bid : price.ask);
@@ -160,9 +164,10 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
     return result;
 }
 
-void CoastlineTrader::assignCashTarget()
+void CoastlineTrader::assignCashTarget(__m256d mask)
 {
-    cashLimit = _mm256_mul_pd(_mm256_set1_pd(lastPrice), profitTarget);
+    __m256d temp = _mm256_mul_pd(_mm256_set1_pd(lastPrice), profitTarget);
+    cashLimit = AVXHelper::setValues(cashLimit, temp, mask);
 }
 
 bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv)
@@ -314,7 +319,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     }
                 }
 
-                assignCashTarget();
+                assignCashTarget(maskTpEqualsZero);
                 IFDEBUG(cout << "Open long" << endl);
             }
             __m256d maskTpGreaterThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
@@ -423,7 +428,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 }
 
                 IFDEBUG(cout << "Open short" << endl);
-                assignCashTarget();
+                assignCashTarget(maskTpEqualsZero);
             }
             __m256d maskTpLessThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS);
             maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, maskEventsGreaterZero);

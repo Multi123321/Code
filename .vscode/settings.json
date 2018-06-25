@@ -108,7 +108,9 @@
         "algorithm": "cpp",
         "__nullptr": "cpp",
         "string_view": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "valarray": "cpp",
+        "ostream": "cpp"
     },
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true
