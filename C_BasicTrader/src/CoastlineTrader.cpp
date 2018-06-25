@@ -92,12 +92,12 @@ __m256d CoastlineTrader::computePnlLastPrice()
     SERIAL_AVX(avx)
     {
         double profitLoss = 0.0;
-        cout << std::dec << "Line: " << __LINE__ << " " << sizes[avx].size();
+        //cout << std::dec << "Line: " << __LINE__ << " " << sizes[avx].size();
         for (uint i = 0; i < sizes[avx].size(); i++)
         {
             profitLoss += sizes[avx][i] * (lastPrice - prices[avx][i]);
         }
-        cout << profitLoss << endl;
+        //cout << profitLoss << endl;
         ((double *)&result)[avx] = profitLoss;
     }
 
@@ -166,10 +166,10 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
     return result;
 }
 
-void CoastlineTrader::assignCashTarget(__m256d mask)
+void CoastlineTrader::assignCashTarget(__m256d maskArg)
 {
     __m256d temp = _mm256_mul_pd(_mm256_set1_pd(lastPrice), profitTarget);
-    cashLimit = AVXHelper::setValues(cashLimit, temp, mask);
+    cashLimit = AVXHelper::setValues(cashLimit, temp, maskArg);
 }
 
 bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv)

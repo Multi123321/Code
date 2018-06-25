@@ -80,8 +80,8 @@ bool FXrateTrading::printDataAsymm(double time)
     totalPos = totalLong + totalShort;
     totalPnl = AVXHelper::verticalSum(coastTraderLong.pnl) + AVXHelper::verticalSum(coastTraderLong.tempPnl) + AVXHelper::verticalSum(coastTraderLong.computePnlLastPrice()) + AVXHelper::verticalSum(coastTraderShort.pnl) + AVXHelper::verticalSum(coastTraderShort.tempPnl) + AVXHelper::verticalSum(coastTraderShort.computePnlLastPrice());
     totalPnlPerc = AVXHelper::verticalSum(coastTraderLong.pnlPerc) + AVXHelper::verticalSum(coastTraderShort.pnlPerc);
-    totalPnlPerc += AVXHelper::verticalSum(_mm256_div_pd(_mm256_add_pd(coastTraderLong.tempPnl, coastTraderLong.computePnlLastPrice()), _mm256_mul_pd(coastTraderLong.cashLimit, coastTraderLong.profitTarget)));
-    totalPnlPerc += AVXHelper::verticalSum(_mm256_div_pd(_mm256_add_pd(coastTraderShort.tempPnl, coastTraderShort.computePnlLastPrice()), _mm256_mul_pd(coastTraderShort.cashLimit, coastTraderShort.profitTarget)));
+    totalPnlPerc += AVXHelper::verticalSum(_mm256_mul_pd(_mm256_div_pd(_mm256_add_pd(coastTraderLong.tempPnl, coastTraderLong.computePnlLastPrice()), coastTraderLong.cashLimit), coastTraderLong.profitTarget));
+    totalPnlPerc += AVXHelper::verticalSum(_mm256_mul_pd(_mm256_div_pd(_mm256_add_pd(coastTraderShort.tempPnl, coastTraderShort.computePnlLastPrice()), coastTraderShort.cashLimit), coastTraderShort.profitTarget));
 
     outputFile << ((((long)time / 3600000) / 24) + 25569) << "," << totalPnl << "," << totalPnlPerc << "," << totalPos << "," << totalLong << "," << totalShort << "," << price << endl;
 
