@@ -426,14 +426,9 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             {
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
                 IFDEBUG(
-<<<<<<< HEAD
-                    SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0) {
-                        cout << "How did this happen! increase position but pos size: " << AVX_TO_STRING(sizeToAdd) << endl;
-=======
                     SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0 && AVX_DOUBLE(maskTpLessThanZero, i) != 0) {
                         cout << "Runner.type: " << AVX_DOUBLE(runner.type, i) << " Sign: " << AVX_DOUBLE(sign, i) << " size: " << AVX_DOUBLE(size, i) << " fraction: " << AVX_DOUBLE(fraction, i) << " shrinkFshort: " << AVX_DOUBLE(shrinkFshort, i) << endl;
                         cout << "How did this happen! increase position but pos size: " << AVX_DOUBLE(sizeToAdd, i) << endl;
->>>>>>> ed3f7336a3ad5edce13fbc8c4dbff5d6352d5f2d
                         exit(EXIT_FAILURE);
                     } });
 
