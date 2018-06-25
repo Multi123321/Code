@@ -10,9 +10,9 @@ class AVXHelper
     AVXHelper(){};
 
   public:
-    static constexpr __m256d avxOne = {1, 1, 1, 1};
-    static constexpr __m256d avxNegOne = {-1, -1, -1, -1};
-    static constexpr __m256d avxZero = {0, 0, 0, 0};
+    static constexpr __m256d avxOne = {1.0, 1.0, 1.0, 1.0};
+    static constexpr __m256d avxNegOne = {-1.0, -1.0, -1.0, -1.0};
+    static constexpr __m256d avxZero = {0.0, 0.0, 0.0, 0.0};
     static inline __m256d setValues(double input, double value, __m256d maskArg);
     static inline __m256d setValues(__m256d input, double value, __m256d maskArg);
     static inline __m256i setValues(__m256i input, long value, __m256d maskArg);
@@ -55,7 +55,7 @@ inline __m256d AVXHelper::applyMask(__m256d value, __m256d maskArg)
     return _mm256_and_pd(value, maskArg);
 }
 
-inline __m256d setValues(double input, double value, __m256d maskArg)
+inline __m256d AVXHelper::setValues(double input, double value, __m256d maskArg)
 {
     return setValues(_mm256_set1_pd(input), _mm256_set1_pd(value), maskArg);
 }
