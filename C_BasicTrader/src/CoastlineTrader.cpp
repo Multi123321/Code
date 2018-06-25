@@ -302,6 +302,7 @@ if (longShort == 1)
         __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
         maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventSmallerZero);
         //if (tP == 0.0) -> use maskTpEqualsZero
+        if (!AVXHelper::isMaskZero(maskTpEqualsZero))
         { // Open long position
             __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
             maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
@@ -338,6 +339,7 @@ if (longShort == 1)
         maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, AVXHelper::invert(maskTpEqualsZero));
         maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, maskEventSmallerZero);
         //else if (tP > 0.0) -> use maskTpGreaterThanZero
+        if (!AVXHelper::isMaskZero(maskTpGreaterThanZero))
         { // Increase long position (buy)
             __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFlong);
 
@@ -411,6 +413,7 @@ else if (longShort == -1)
         __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
         maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventsGreaterZero);
         // if (tP == 0.0) -> use maskTpEqualsZero
+        if (!AVXHelper::isMaskZero(maskTpEqualsZero))
         { // Open short position
 
             __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
@@ -449,6 +452,7 @@ else if (longShort == -1)
         maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, AVXHelper::invert(maskTpEqualsZero));
         maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, maskEventsGreaterZero);
         // else if (tP < 0.0) -> use maskTpLessThanZero
+        if (!AVXHelper::isMaskZero(maskTpLessThanZero))
         {
             __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
             IFDEBUG(

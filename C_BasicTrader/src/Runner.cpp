@@ -112,7 +112,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /*     if (price.bid > extreme) */
     __m256d mask22 = _mm256_cmp_pd(_mm256_set1_pd(price.bid), extreme, _CMP_GT_OS);
-    mask22 = AVXHelper::multMasks(mask12, AVXHelper::invert(mask21));
+    mask22 = AVXHelper::multMasks(mask22, AVXHelper::invert(mask21));
     mask22 = AVXHelper::multMasks(mask22, mask2);
 
     /*         if (log(extreme / reference) >= deltaStarDown) */
