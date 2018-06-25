@@ -141,7 +141,7 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
             for (uint i = 0; i < len; i++)
             {
                 addPnl = (pricE - prices[avx].front()) * sizes[avx].front();
-                ((double *)&tempPnl)[avx] += ((double *)&addPnl)[avx];
+                ((double *)&tempPnl)[avx] += addPnl;
                 ((double *)&tP)[avx] -= sizes[avx].front();
                 sizes[avx].erase(sizes[avx].begin());
                 prices[avx].erase(prices[avx].begin());
@@ -330,6 +330,7 @@ if (longShort == 1)
             IFDEBUG(cout << "Open long" << endl);
         }
         __m256d maskTpGreaterThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
+        maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, AVXHelper::invert(maskTpEqualsZero));
         maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, maskEventSmallerZero);
         //else if (tP > 0.0) -> use maskTpGreaterThanZero
         { // Increase long position (buy)
@@ -359,6 +360,7 @@ if (longShort == 1)
     }
     mask maskEventGreaterZeroAndTpGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
     maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS));
+    maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, maskEventSmallerZero);
     maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, tryToCloseElse);
     //else if (event > 0 && tP > 0.0)
     if (!AVXHelper::isMaskZero(maskEventGreaterZeroAndTpGreaterZero))
@@ -438,6 +440,7 @@ else if (longShort == -1)
             assignCashTarget();
         }
         __m256d maskTpLessThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS);
+        maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, AVXHelper::invert(maskTpEqualsZero));
         maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, maskEventsGreaterZero);
         // else if (tP < 0.0) -> use maskTpLessThanZero
         {
@@ -466,6 +469,7 @@ else if (longShort == -1)
     }
     mask maskEventLessZeroAndTpLessZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
     maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS));
+    maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, maskEventsGreaterZero);
     maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, tryToCloseElse);
     // else if (event < 0.0 && tP < 0.0) -> use maskEventLessZeroAndTpLessZero
     if (!AVXHelper::isMaskZero(maskEventLessZeroAndTpLessZero))
