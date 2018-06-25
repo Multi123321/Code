@@ -8,6 +8,8 @@ class AVXHelper
 {
   private:
     AVXHelper(){};
+    static constexpr __m256i zeroMask = {0x0000000000000000, 0x0000000000000000, 0x0000000000000000, 0x0000000000000000};
+    static constexpr __m256i oneMask = {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF};
 
   public:
     static constexpr __m256d avxOne = {1.0, 1.0, 1.0, 1.0};
@@ -27,6 +29,7 @@ class AVXHelper
     static inline __m256d avxLogDouble(__m256d input);
     static inline __m256d avxExpDouble(__m256d input);
     static inline __m256d avxPowDouble(__m256d input, double power);
+    static inline bool isMaskZero(__m256d value);
     static inline double verticalSum(__m256d value);
 };
 
@@ -125,7 +128,12 @@ inline double AVXHelper::verticalSum(__m256d value)
 
 inline __m256d AVXHelper::invert(__m256d value)
 {
-    return _mm256_and_pd(value, _mm256_setzero_pd());
+    return _mm256_xor_pd(value, _mm256_castsi256_pd(oneMask));
+}
+
+inline bool AVXHelper::isMaskZero(__m256d value)
+{
+    return _mm256_testc_pd(_mm256_cmp_pd(value, _mm256_castsi256_pd(zeroMask), _CMP_EQ_OS), _mm256_castsi256_pd(oneMask));
 }
 
 #endif
