@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <x86intrin.h>
+#include <algorithm>
 
 #include "helper/Macros.h"
 #include "AVXHelper.h"
@@ -34,10 +35,36 @@ CoastlineTrader::CoastlineTrader(__m256d dOriginal, __m256d dUp, __m256d dDown, 
     fxRate = FxRate;
 }
 
+//#define AVX_List
+
+#ifdef AVX_List
+deque<__m256d> convertListArrayToAvx(deque<double> list[])
+{
+    deque<__m256d> result;
+    uint maxSize = max(max(list[0].size(), list[1].size()), max(list[2].size(), list[3].size()));
+    for (uint i = 0; i < maxSize; i++)
+    {
+        double elements[4];
+        elements[0] = (i < list[0].size()) ? list[0].at(i) : 0.0;
+        elements[1] = (i < list[1].size()) ? list[1].at(i) : 0.0;
+        elements[2] = (i < list[2].size()) ? list[2].at(i) : 0.0;
+        elements[3] = (i < list[3].size()) ? list[3].at(i) : 0.0;
+        __m256d newElement = *elements;
+        result.push_back(newElement);
+    }
+    return result;
+}
+#endif
+
 __m256d CoastlineTrader::computePnl(PriceFeedData::Price price)
 {
     __m256d result;
+#ifdef AVX_List
+    __m256d maskTp = _mm256_cmp_pd(tp, AVXHelper::avxZero, _CMP_GT_OS);
 
+    __m256d priceE = AVXHelper::setValues(price.ask, price.bid, maskTp);
+
+#else
     SERIAL_AVX(avx)
     {
         double profitLoss = 0.0;
@@ -49,6 +76,7 @@ __m256d CoastlineTrader::computePnl(PriceFeedData::Price price)
 
         ((double *)&result)[avx] = profitLoss;
     }
+#endif
 
     return result;
 }
@@ -128,6 +156,7 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
             ((long *)&result)[avx] = 0x0000000000000000;
         }
     }
+    return result;
 }
 
 void CoastlineTrader::assignCashTarget()
