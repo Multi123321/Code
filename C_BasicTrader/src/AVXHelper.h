@@ -24,7 +24,7 @@ class AVXHelper
     static inline __m256d addMasked(__m256d summand1, __m256d summand2, __m256d maskArg);
     static inline __m256d multiply(__m256d first, __m256d second, __m256d third);
     static inline __m256d multiply(__m256d first, __m256d second, __m256d third, __m256d forth);
-    static inline __m256d applyMask(__m256d value, __m256d maskArg);
+    static inline __m256d multMasks(__m256d mask1, __m256d mask2);
     static inline __m256d invert(__m256d value);
     static inline __m256d avxLogDouble(__m256d input);
     static inline __m256d avxExpDouble(__m256d input);
@@ -40,7 +40,7 @@ inline __m256d AVXHelper::addMasked(__m256d summand1, double summand2, __m256d m
 
 inline __m256d AVXHelper::addMasked(__m256d summand1, __m256d summand2, __m256d maskArg)
 {
-    return _mm256_add_pd(summand1, applyMask(summand2, maskArg));
+    return _mm256_add_pd(summand1, setValues(summand2, avxZero, maskArg));
 }
 
 inline __m256d AVXHelper::multiply(__m256d first, __m256d second, __m256d third)
@@ -53,9 +53,9 @@ inline __m256d AVXHelper::multiply(__m256d first, __m256d second, __m256d third,
     return _mm256_mul_pd(first, _mm256_mul_pd(second, _mm256_mul_pd(third, forth)));
 }
 
-inline __m256d AVXHelper::applyMask(__m256d value, __m256d maskArg)
+inline __m256d AVXHelper::multMasks(__m256d mask1, __m256d mask2)
 {
-    return _mm256_and_pd(value, maskArg);
+    return _mm256_and_pd(mask1, mask2);
 }
 
 inline __m256d AVXHelper::setValues(double input, double value, __m256d maskArg)

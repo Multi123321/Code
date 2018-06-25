@@ -277,26 +277,26 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     if (longShort == 1)
     { // Long positions only
         mask maskEventSmallerZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
-        maskEventSmallerZero = AVXHelper::applyMask(tryToCloseElse, maskEventSmallerZero);
+        maskEventSmallerZero = AVXHelper::multMasks(tryToCloseElse, maskEventSmallerZero);
         //if (event < 0) -> use maskEventSmallerZero
         if (!AVXHelper::isMaskZero(maskEventSmallerZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, AVXHelper::avxNegOne);
 
             __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
-            maskTpEqualsZero = AVXHelper::applyMask(maskTpEqualsZero, maskEventSmallerZero);
+            maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventSmallerZero);
             //if (tP == 0.0) -> use maskTpEqualsZero
             { // Open long position
                 __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
                 maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
-                maskOppositeInvAbsGreaterThan15 = AVXHelper::applyMask(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
+                maskOppositeInvAbsGreaterThan15 = AVXHelper::multMasks(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
                 //if (std::abs(oppositeInv) > 15.0) -> use maskOppositeInvAbsGreaterThan15
                 {
                     AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan15);
 
                     __m256d maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
                     maskOppositeInvAbsGreaterThan30 = _mm256_or_pd(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
-                    maskOppositeInvAbsGreaterThan30 = AVXHelper::applyMask(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
+                    maskOppositeInvAbsGreaterThan30 = AVXHelper::multMasks(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
                     //if (std::abs(oppositeInv) > 30.0) -> use maskOppositeInvAbsGreaterThan30
                     {
                         AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan30);
@@ -318,7 +318,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 IFDEBUG(cout << "Open long" << endl);
             }
             __m256d maskTpGreaterThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
-            maskTpGreaterThanZero = AVXHelper::applyMask(maskTpGreaterThanZero, maskEventSmallerZero);
+            maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, maskEventSmallerZero);
             //else if (tP > 0.0) -> use maskTpGreaterThanZero
             { // Increase long position (buy)
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFlong);
@@ -346,8 +346,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             }
         }
         mask maskEventGreaterZeroAndTpGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
-        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::applyMask(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS));
-        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::applyMask(maskEventGreaterZeroAndTpGreaterZero, tryToCloseElse);
+        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS));
+        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, tryToCloseElse);
         //else if (event > 0 && tP > 0.0)
         if (!AVXHelper::isMaskZero(maskEventGreaterZeroAndTpGreaterZero))
         { // Possibility to decrease long position only at intrinsic events
@@ -383,27 +383,27 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     else if (longShort == -1)
     { // Short positions only
         mask maskEventsGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
-        maskEventsGreaterZero = AVXHelper::applyMask(tryToCloseElse, maskEventsGreaterZero);
+        maskEventsGreaterZero = AVXHelper::multMasks(tryToCloseElse, maskEventsGreaterZero);
         // if (event > 0) -> use maskEventsGreaterZero
         if (!AVXHelper::isMaskZero(maskEventsGreaterZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
 
             __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
-            maskTpEqualsZero = AVXHelper::applyMask(maskTpEqualsZero, maskEventsGreaterZero);
+            maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventsGreaterZero);
             // if (tP == 0.0) -> use maskTpEqualsZero
             { // Open short position
 
                 __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
                 maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
-                maskOppositeInvAbsGreaterThan15 = AVXHelper::applyMask(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
+                maskOppositeInvAbsGreaterThan15 = AVXHelper::multMasks(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
                 //if (std::abs(oppositeInv) > 15.0) -> use maskOppositeInvAbsGreaterThan15
                 {
                     AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan15);
 
                     __m256d maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
                     maskOppositeInvAbsGreaterThan30 = _mm256_or_pd(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
-                    maskOppositeInvAbsGreaterThan30 = AVXHelper::applyMask(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
+                    maskOppositeInvAbsGreaterThan30 = AVXHelper::multMasks(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
                     //if (std::abs(oppositeInv) > 30.0) -> use maskOppositeInvAbsGreaterThan30
                     {
                         AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan30);
@@ -426,7 +426,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 assignCashTarget();
             }
             __m256d maskTpLessThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS);
-            maskTpLessThanZero = AVXHelper::applyMask(maskTpLessThanZero, maskEventsGreaterZero);
+            maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, maskEventsGreaterZero);
             // else if (tP < 0.0) -> use maskTpLessThanZero
             {
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
@@ -453,8 +453,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             }
         }
         mask maskEventLessZeroAndTpLessZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
-        maskEventLessZeroAndTpLessZero = AVXHelper::applyMask(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS));
-        maskEventLessZeroAndTpLessZero = AVXHelper::applyMask(maskEventLessZeroAndTpLessZero, tryToCloseElse);
+        maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS));
+        maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, tryToCloseElse);
         // else if (event < 0.0 && tP < 0.0) -> use maskEventLessZeroAndTpLessZero
         if (!AVXHelper::isMaskZero(maskEventLessZeroAndTpLessZero))
         {
