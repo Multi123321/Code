@@ -24,5 +24,6 @@
 
 #define SERIAL_AVX(x) for (int x = 0; x < 4; x++)
 #define AVX_DOUBLE(x, i) ((double *)&x)[i]
+#define AVX_TO_STRING(x) AVX_DOUBLE(x, 0) << " " << AVX_DOUBLE(x, 1) << " " << AVX_DOUBLE(x, 2) << " " << AVX_DOUBLE(x, 3)
 
 #endif

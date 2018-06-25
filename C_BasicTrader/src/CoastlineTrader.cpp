@@ -180,7 +180,10 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     __m256d event = _mm256_setzero_pd();
 
     __m256d fraction = _mm256_set1_pd(1.0);
-    __m256d size = (liquidity.liq < 0.5 ? 0.5 : 1.0);
+
+    mask liqSmallerZeroPoint5 = _mm256_cmp_pd(liquidity.liq, _mm256_set1_pd(0.5), _CMP_LT_OS);
+    __m256d size = _mm256_set1_pd(1.0);
+    size = AVXHelper::setValues(size, 0.5, liqSmallerZeroPoint5);
 
     // call runner and set event
     if (longShort == 1)
@@ -285,7 +288,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
 
                 IFDEBUG(
                     SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] < 0.0) {
-                        cout << "How did this happen! increase position but neg size: " << sizeToAdd << endl;
+                        cout << "How did this happen! increase position but neg size: " << AVX_TO_STRING(sizeToAdd) << endl;
                         exit(EXIT_FAILURE);
                     } });
 
@@ -351,7 +354,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             maskTpEqualsZero = AVXHelper::applyMask(maskTpEqualsZero, maskEventsGreaterZero);
             // if (tP == 0.0) -> use maskTpEqualsZero
             { // Open short position
-                __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
 
                 __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
                 maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
@@ -391,7 +393,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
                 IFDEBUG(
                     SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0) {
-                        cout << "How did this happen! increase position but neg size: " << sizeToAdd << endl;
+                        cout << "How did this happen! increase position but neg size: " << AVX_TO_STRING(sizeToAdd) << endl;
                         exit(EXIT_FAILURE);
                     } });
 
@@ -450,6 +452,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         cout << "Should never happen! " << longShort << endl;
     }
     //some prints
-    IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " << lastPrice << std::endl);
+    // IFDEBUG({__m256d lastPrice = computePnlLastPrice();
+    //         cout << "longShort: " << AVX_TO_STRING(longShort) << "; tP: " << AVX_TO_STRING(tP) << "; pnl: " << AVX_TO_STRING(pnl) << "; pnlPerc: " << AVX_TO_STRING(pnlPerc) << "; tempPnl: " << AVX_TO_STRING(tempPnl) << "; unrealized: " << AVX_TO_STRING(lastPrice) << "; cashLimit: " << AVX_TO_STRING(cashLimit) << "; price: " << lastPrice << std::endl; });
     return true;
 }
