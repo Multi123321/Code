@@ -3,6 +3,8 @@
 
 #include <x86intrin.h>
 #include <math.h>
+#include <iostream>
+#include <string.h>
 
 class AVXHelper
 {
@@ -31,6 +33,7 @@ class AVXHelper
     static inline __m256d avxPowDouble(__m256d input, double power);
     static inline bool isMaskZero(__m256d value);
     static inline double verticalSum(__m256d value);
+    static inline void printMask(__m256d mask);
 };
 
 inline __m256d AVXHelper::addMasked(__m256d summand1, double summand2, __m256d maskArg)
@@ -133,7 +136,29 @@ inline __m256d AVXHelper::invert(__m256d value)
 
 inline bool AVXHelper::isMaskZero(__m256d value)
 {
-    return _mm256_testc_pd(_mm256_cmp_pd(value, _mm256_castsi256_pd(zeroMask), _CMP_EQ_OS), _mm256_castsi256_pd(oneMask));
+    bool result = _mm256_testc_pd(_mm256_cmp_pd(value, _mm256_castsi256_pd(zeroMask), _CMP_EQ_OS), _mm256_castsi256_pd(oneMask));
+
+    // printMask(value);
+    // if (result == true)
+    // {
+    //     std::cout << " Mask seems to be zero!" << std::endl;
+    // }
+    // else
+    // {
+    //     std::cout << " This is not zero..." << std::endl;
+    // }
+
+    return result; // _mm256_testc_pd(_mm256_cmp_pd(value, _mm256_castsi256_pd(zeroMask), _CMP_EQ_OS), _mm256_castsi256_pd(oneMask));
+}
+
+inline void AVXHelper::printMask(__m256d mask)
+{
+    uint64_t u0, u1, u2, u3;
+    memcpy(&u0, &(((double *)&mask)[0]), sizeof(((double *)&mask)[0]));
+    memcpy(&u1, &(((double *)&mask)[1]), sizeof(((double *)&mask)[1]));
+    memcpy(&u2, &(((double *)&mask)[2]), sizeof(((double *)&mask)[2]));
+    memcpy(&u3, &(((double *)&mask)[3]), sizeof(((double *)&mask)[3]));
+    std::cout << std::hex << u0 << " " << u1 << " " << u2 << " " << u3;
 }
 
 #endif
