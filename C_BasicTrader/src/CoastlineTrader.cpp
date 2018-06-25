@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <x86intrin.h>
 #include <algorithm>
+#include <string.h>
 
 #include "helper/Macros.h"
 #include "AVXHelper.h"
@@ -206,6 +207,11 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     });
     mask tryToCloseElse = AVXHelper::invert(tryToCloseMask);
 
+    if (AVXHelper::isMaskZero(tryToCloseElse))
+    {
+        return true;
+    }
+
     __m256d event = AVXHelper::avxZero;
 
     __m256d fraction = _mm256_set1_pd(1.0);
@@ -270,10 +276,10 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
 
     if (longShort == 1)
     { // Long positions only
-
         mask maskEventSmallerZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
         maskEventSmallerZero = AVXHelper::applyMask(tryToCloseElse, maskEventSmallerZero);
         //if (event < 0) -> use maskEventSmallerZero
+        if (!AVXHelper::isMaskZero(maskEventSmallerZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
 
@@ -297,8 +303,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     }
                 }
                 __m256d sizeToAdd = _mm256_mul_pd(sign, size);
-                AVXHelper::applyMask(sizeToAdd, maskTpEqualsZero);
-                tP = _mm256_add_pd(tP, sizeToAdd);
+                tP = AVXHelper::addMasked(tP, sizeToAdd, maskTpEqualsZero);
 
                 SERIAL_AVX(i)
                 {
@@ -344,6 +349,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         maskEventGreaterZeroAndTpGreaterZero = AVXHelper::applyMask(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS));
         maskEventGreaterZeroAndTpGreaterZero = AVXHelper::applyMask(maskEventGreaterZeroAndTpGreaterZero, tryToCloseElse);
         //else if (event > 0 && tP > 0.0)
+        if (!AVXHelper::isMaskZero(maskEventGreaterZeroAndTpGreaterZero))
         { // Possibility to decrease long position only at intrinsic events
             mask TpGreaterZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
             __m256d pricE = AVXHelper::setValues(_mm256_set1_pd(price.bid), price.ask, TpGreaterZero);
@@ -376,10 +382,10 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     }
     else if (longShort == -1)
     { // Short positions only
-
         mask maskEventsGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
         maskEventsGreaterZero = AVXHelper::applyMask(tryToCloseElse, maskEventsGreaterZero);
         // if (event > 0) -> use maskEventsGreaterZero
+        if (!AVXHelper::isMaskZero(maskEventsGreaterZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
 
@@ -451,6 +457,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         maskEventLessZeroAndTpLessZero = AVXHelper::applyMask(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS));
         maskEventLessZeroAndTpLessZero = AVXHelper::applyMask(maskEventLessZeroAndTpLessZero, tryToCloseElse);
         // else if (event < 0.0 && tP < 0.0) -> use maskEventLessZeroAndTpLessZero
+        if (!AVXHelper::isMaskZero(maskEventLessZeroAndTpLessZero))
         {
             mask TpGreaterZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
             __m256d pricE = AVXHelper::setValues(_mm256_set1_pd(price.ask), price.bid, TpGreaterZero);
