@@ -434,7 +434,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     if (((double *)&maskTpEqualsZero)[i] != 0)
                     {
                         sizes[i].push_front(((double *)&sizeToAdd)[i]);
-                        prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.ask : price.bid);
+                        prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.bid : price.ask);
                     }
 
                     IFDEBUG(cout << "Open short" << endl);
