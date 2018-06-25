@@ -151,13 +151,13 @@ inline bool AVXHelper::isMaskZero(__m256d value)
     return result; // _mm256_testc_pd(_mm256_cmp_pd(value, _mm256_castsi256_pd(zeroMask), _CMP_EQ_OS), _mm256_castsi256_pd(oneMask));
 }
 
-inline void AVXHelper::printMask(__m256d mask)
+inline void AVXHelper::printMask(__m256d maskArg)
 {
     uint64_t u0, u1, u2, u3;
-    memcpy(&u0, &(((double *)&mask)[0]), sizeof(((double *)&mask)[0]));
-    memcpy(&u1, &(((double *)&mask)[1]), sizeof(((double *)&mask)[1]));
-    memcpy(&u2, &(((double *)&mask)[2]), sizeof(((double *)&mask)[2]));
-    memcpy(&u3, &(((double *)&mask)[3]), sizeof(((double *)&mask)[3]));
+    memcpy(&u0, &(((double *)&maskArg)[0]), sizeof(((double *)&maskArg)[0]));
+    memcpy(&u1, &(((double *)&maskArg)[1]), sizeof(((double *)&maskArg)[1]));
+    memcpy(&u2, &(((double *)&maskArg)[2]), sizeof(((double *)&maskArg)[2]));
+    memcpy(&u3, &(((double *)&maskArg)[3]), sizeof(((double *)&maskArg)[3]));
     std::cout << std::hex << u0 << " " << u1 << " " << u2 << " " << u3;
 }
 
