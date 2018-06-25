@@ -155,6 +155,7 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
             ((double *)&tempPnl)[avx] = 0;
             assert(sizes[avx].empty());
             assert(prices[avx].empty());
+            ((double *)&tP)[avx] = 0;
             ((long *)&result)[avx] = 0xFFFFFFFFFFFFFFFF;
         }
         else
