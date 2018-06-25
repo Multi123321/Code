@@ -109,5 +109,8 @@
         "__nullptr": "cpp",
         "string_view": "cpp",
         "iostream": "cpp"
-    }
+    },
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true
 }
