@@ -21,6 +21,8 @@ int main(int argc, const char *argv[])
     // TODO Currency configuration
     const int numberOfCurrencies = 4;
     string ccyList[numberOfCurrencies] = {"kurs1.csv", "kurs2.csv", "kurs3.csv", "kurs4.csv"};
+    //const int numberOfCurrencies = 1;
+    //string ccyList[numberOfCurrencies] = {"EUR_USD.csv"};
 
     FXrateTrading trading[numberOfCurrencies];
 
