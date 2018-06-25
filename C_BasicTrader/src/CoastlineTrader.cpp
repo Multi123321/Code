@@ -211,8 +211,10 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     __m256d fraction = _mm256_set1_pd(1.0);
 
     mask liqSmallerZeroPoint5 = _mm256_cmp_pd(liquidity.liq, _mm256_set1_pd(0.5), _CMP_LT_OS);
+    mask liqSmallerZeroPoint1 = _mm256_cmp_pd(liquidity.liq, _mm256_set1_pd(0.1), _CMP_LT_OS);
     __m256d size = _mm256_set1_pd(1.0);
     size = AVXHelper::setValues(size, 0.5, liqSmallerZeroPoint5);
+    size = AVXHelper::setValues(size, 0.1, liqSmallerZeroPoint1);
 
     // call runner and set event
     if (longShort == 1)
@@ -422,7 +424,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
                 IFDEBUG(
                     SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0) {
-                        cout << "How did this happen! increase position but neg size: " << AVX_TO_STRING(sizeToAdd) << endl;
+                        cout << "How did this happen! increase position but pos size: " << AVX_TO_STRING(sizeToAdd) << endl;
                         exit(EXIT_FAILURE);
                     } });
 
