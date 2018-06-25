@@ -137,7 +137,6 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
 
         if ((((double *)&tempPnl)[avx] + ((double *)&computedPnl)[avx]) / ((double *)&cashLimit)[avx] >= 1)
         {
-            cout << "closing" << endl;
             double pricE = (((double *)&tP)[avx] > 0.0 ? price.bid : price.ask);
             double addPnl = 0;
             uint len = prices[avx].size();
