@@ -43,7 +43,7 @@ inline __m256d AVXHelper::addMasked(__m256d summand1, double summand2, __m256d m
 
 inline __m256d AVXHelper::addMasked(__m256d summand1, __m256d summand2, __m256d maskArg)
 {
-    return _mm256_add_pd(summand1, setValues(summand2, avxZero, maskArg));
+    return _mm256_add_pd(summand1, setValues(avxZero, summand2, maskArg));
 }
 
 inline __m256d AVXHelper::multiply(__m256d first, __m256d second, __m256d third)
