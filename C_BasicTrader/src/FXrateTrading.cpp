@@ -23,7 +23,7 @@ FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, __m256d &deltas)
     oneDay = 24.0 * 60.0 * 60.0 * 1000.0;
     FXrate = string(rate);
 
-    printDataHeader();
+    IFPRINT(printDataHeader());
 
     if (nbOfCoastTraders != 4)
     {
@@ -48,7 +48,7 @@ bool FXrateTrading::runTradingAsymm(PriceFeedData::Price price)
         while (currentTime <= price.time)
             currentTime += oneDay;
 
-        IFDEBUG(printDataAsymm(currentTime));
+        IFPRINT(printDataAsymm(currentTime));
     }
     return true;
 }
