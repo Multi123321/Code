@@ -16,6 +16,12 @@ LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaD
     initalized = false;
     alphaWeight = exp(-2.0/(alpha + 1.0));
     computeH1H2exp(dStar);
+    liq = 0;
+    upLiq = 0;
+    downLiq = 0;
+    surp = 0; 
+    downSurp = 0;
+    upSurp = 0;
 } 
 
 LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaDownArg, PriceFeedData::Price priceArg, double dStarArg, double alphaArg) : 
@@ -26,6 +32,12 @@ LocalLiquidity::LocalLiquidity(double deltaArg, double deltaUpArg, double deltaD
     initalized = true;
     alphaWeight = exp(-2.0/(alpha + 1.0));
     computeH1H2exp(dStar);
+    liq = 0;
+    upLiq = 0;
+    downLiq = 0;
+    surp = 0; 
+    downSurp = 0;
+    upSurp = 0;
 } 
 
 bool LocalLiquidity::computeH1H2exp(double dS)
@@ -107,14 +119,6 @@ int LocalLiquidity::run(PriceFeedData::Price price){
 
 bool LocalLiquidity::computation(PriceFeedData::Price price){    
     int event = run(price);
-
-    //needed or else jump on uninitialized values warning
-    liq = 0;
-    upLiq = 0;
-    downLiq = 0;
-    surp = 0; 
-    downSurp = 0;
-    upSurp = 0;
 
     if( event != 0 ){
         surp = alphaWeight*(abs(event) == 1 ? 0.08338161 : 2.525729) + (1.0 - alphaWeight)*surp;

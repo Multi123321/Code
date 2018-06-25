@@ -12,10 +12,10 @@ public:
     int type;
     bool initalized = false;
     
-    double surp, upSurp, downSurp = 0;
-    double liq, upLiq, downLiq = 0;
-    double alpha, alphaWeight = 0;
-    double H1, H2 = 0;
+    double surp, upSurp, downSurp;
+    double liq, upLiq, downLiq;
+    double alpha, alphaWeight;
+    double H1, H2;
     
     LocalLiquidity();
     LocalLiquidity(double delta, double deltaUp, double deltaDown, double dStar, double alpha);
