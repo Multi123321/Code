@@ -11,6 +11,10 @@
 #include "FXrateTrading.h"
 #include "CSVReader.h"
 
+extern "C" {
+#include <likwid.h>
+}
+
 using namespace std;
 
 int main(int argc, const char *argv[])
@@ -19,10 +23,10 @@ int main(int argc, const char *argv[])
     config::loadConfig();
 
     // TODO Currency configuration
-    const int numberOfCurrencies = 4;
-    string ccyList[numberOfCurrencies] = {"kurs1.csv", "kurs2.csv", "kurs3.csv", "kurs4.csv"};
-    //const int numberOfCurrencies = 1;
-    //string ccyList[numberOfCurrencies] = {"EUR_USD.csv"};
+    // const int numberOfCurrencies = 4;
+    // string ccyList[numberOfCurrencies] = {"kurs1.csv", "kurs2.csv", "kurs3.csv", "kurs4.csv"};
+    const int numberOfCurrencies = 1;
+    string ccyList[numberOfCurrencies] = {"EUR_USD.csv"};
 
     FXrateTrading trading[numberOfCurrencies];
 
@@ -32,7 +36,7 @@ int main(int argc, const char *argv[])
 
     PriceFeedData prices[numberOfCurrencies];
 
-#pragma omp parallel for
+    //#pragma omp parallel for
     for (int i = 0; i < numberOfCurrencies; ++i)
     {
         trading[i] = FXrateTrading(ccyList[i], numberOfThresholds, deltaS);
@@ -44,19 +48,30 @@ int main(int argc, const char *argv[])
 
     Timer totalTimer;
     totalTimer.reset();
-// Run
-#pragma omp parallel for
+    IFLIKWID(likwid_markerInit());
+    IFLIKWID(likwid_markerStartRegion("code"));
+    // Run
+    //#pragma omp parallel for
     for (int i = 0; i < numberOfCurrencies; ++i)
     {
         Timer timer;
         timer.reset();
+        int j = 0;
         for (PriceFeedData::Price price : prices[i].priceFeed)
         {
+            if (j == 1000000)
+                break;
+            IFLIKWID(likwid_markerStartRegion("calculation"));
             trading[i].runTradingAsymm(price);
+            IFLIKWID(likwid_markerStopRegion("calculation"));
+            j++;
         }
         time = timer.elapsed();
         cout << ccyList[i] << " took: " << time << " Seconds" << std::endl;
     }
+
+    IFLIKWID(likwid_markerStopRegion("code"));
+    IFLIKWID(likwid_markerClose());
 
     cout << "Total time: " << totalTimer.elapsed() << std::endl;
 }

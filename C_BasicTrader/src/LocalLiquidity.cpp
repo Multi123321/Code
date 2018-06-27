@@ -8,6 +8,10 @@
 #include <math.h>
 #include <stdlib.h>
 
+extern "C" {
+#include <likwid.h>
+}
+
 using namespace std;
 
 LocalLiquidity::LocalLiquidity()
@@ -201,6 +205,8 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
 
 bool LocalLiquidity::computation(PriceFeedData::Price price)
 {
+    IFLIKWID(likwid_markerStartRegion("LocalLiquidity"));
+
     __m256d event = run(price);
 
     __m256d mask1 = _mm256_cmp_pd(event, _mm256_set1_pd(0.0), _CMP_NEQ_OS);
@@ -259,6 +265,6 @@ bool LocalLiquidity::computation(PriceFeedData::Price price)
         __m256d downSurpArgument = _mm256_mul_pd(_mm256_mul_pd(_mm256_set1_pd(sqrt(alpha)), _mm256_sub_pd(downSurp, H1)), oneDivSqrtH2);
         downLiq = AVXHelper::setValues(downLiq, _mm256_sub_pd(_mm256_set1_pd(1.0), CumNorm(downSurpArgument)), mask1);
     }
-
+    IFLIKWID(likwid_markerStopRegion("LocalLiquidity"));
     return true;
 }

@@ -12,6 +12,10 @@
 #include "helper/Macros.h"
 #include "AVXHelper.h"
 
+extern "C" {
+#include <likwid.h>
+}
+
 typedef unsigned int uint;
 
 CoastlineTrader::CoastlineTrader()
@@ -36,7 +40,7 @@ CoastlineTrader::CoastlineTrader(__m256d dOriginal, __m256d dUp, __m256d dDown, 
     fxRate = FxRate;
 }
 
-//#define AVX_List
+    //#define AVX_List
 
 #ifdef AVX_List
 deque<__m256d> convertListArrayToAvx(deque<double> list[])
@@ -174,6 +178,7 @@ void CoastlineTrader::assignCashTarget(__m256d maskArg)
 
 bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d oppositeInv)
 {
+    IFLIKWID(likwid_markerStartRegion("coastlineTrader"));
     if (!initalized)
     {
         runner = Runner(deltaUp, deltaDown, price, fxRate, deltaUp, deltaDown);
@@ -195,10 +200,12 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
 
     lastPrice = price.getMid();
 
+    IFLIKWID(likwid_markerStopRegion("coastlineTrader"));
     if (!liquidity.computation(price))
     {
         cout << "Didn't compute liquidity!" << endl;
     }
+    IFLIKWID(likwid_markerStartRegion("coastlineTrader"));
 
     mask tryToCloseMask = tryToClose(price);
 
@@ -221,6 +228,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                      << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
                      << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
             });
+        IFLIKWID(likwid_markerStopRegion("coastlineTrader"));
         return true;
     }
 
@@ -237,9 +245,11 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     // call runner and set event
     if (longShort == 1)
     {
+        IFLIKWID(likwid_markerStopRegion("coastlineTrader"));
         __m256d eventR = runner.run(price);
         __m256d eventG00 = runnerG[0][0].run(price);
         __m256d eventG01 = runnerG[0][1].run(price);
+        IFLIKWID(likwid_markerStartRegion("coastlineTrader"));
 
         SERIAL_AVX(i)
         {
@@ -262,9 +272,11 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     }
     else if (longShort == -1)
     {
+        IFLIKWID(likwid_markerStopRegion("coastlineTrader"));
         __m256d eventR = runner.run(price);
         __m256d eventG10 = runnerG[1][0].run(price);
         __m256d eventG11 = runnerG[1][1].run(price);
+        IFLIKWID(likwid_markerStartRegion("coastlineTrader"));
 
         SERIAL_AVX(i)
         {
@@ -522,5 +534,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                  << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
                  << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
         });
+    IFLIKWID(likwid_markerStopRegion("coastlineTrader"));
     return true;
 }

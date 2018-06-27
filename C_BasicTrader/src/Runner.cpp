@@ -5,6 +5,11 @@
 #include <math.h>
 #include <string>
 #include <x86intrin.h>
+#include "helper/Macros.h"
+
+extern "C" {
+#include <likwid.h>
+}
 
 Runner::Runner()
 {
@@ -59,6 +64,7 @@ __m256d Runner::run(PriceFeedData::Price price)
     //TODO: search for better way...
     // if( &price == NULL )
     //     return 0;
+    IFLIKWID(likwid_markerStartRegion("runner"));
 
     __m256d returnValues = _mm256_set1_pd(0.0);
 
@@ -181,6 +187,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /* else */
     //returnValues = AVXHelper::setValues(returnValues, 0.0, mask3); /* return 0; */
+    IFLIKWID(likwid_markerStopRegion("runner"));
 
     return returnValues;
 }
