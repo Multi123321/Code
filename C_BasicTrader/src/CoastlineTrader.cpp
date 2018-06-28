@@ -122,15 +122,7 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         cout << "Didn't compute liquidity!" << endl;
     }
 
-    if (tryToClose(price))
-    { /* -- Try to close position -- */
-        IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " << lastPrice << std::endl);
-        IFDEBUG(cout << "Close" << endl);
-        return true;
-    }
-
     int event = 0;
-
     double fraction = 1.0;
     double size = (liquidity.liq < 0.5 ? 0.5 : 1.0);
     size = (liquidity.liq < 0.1 ? 0.1 : size);
@@ -156,7 +148,38 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
             runnerG[0][0].run(price);
             runnerG[0][1].run(price);
         }
+    }
+    else if (longShort == -1)
+    { // Short positions only
+        event = runner.run(price);
+        if (-30.0 < tP && tP < -15.0)
+        {
+            event = runnerG[1][0].run(price);
+            runnerG[1][1].run(price);
+            fraction = 0.5;
+        }
+        else if (tP <= -30.0)
+        {
+            event = runnerG[1][1].run(price);
+            runnerG[1][0].run(price);
+            fraction = 0.25;
+        }
+        else
+        {
+            runnerG[1][0].run(price);
+            runnerG[1][1].run(price);
+        }
+    }
 
+    if (tryToClose(price))
+    { /* -- Try to close position -- */
+        IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " << lastPrice << "; runner.type: " << runner.type << std::endl);
+        IFDEBUG(cout << "Close" << endl);
+        return true;
+    }
+
+    if (longShort == 1)
+    { // Long positions only
         if (event < 0)
         {
             if (tP == 0.0)
@@ -224,25 +247,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
     }
     else if (longShort == -1)
     { // Short positions only
-        event = runner.run(price);
-        if (-30.0 < tP && tP < -15.0)
-        {
-            event = runnerG[1][0].run(price);
-            runnerG[1][1].run(price);
-            fraction = 0.5;
-        }
-        else if (tP <= -30.0)
-        {
-            event = runnerG[1][1].run(price);
-            runnerG[1][0].run(price);
-            fraction = 0.25;
-        }
-        else
-        {
-            runnerG[1][0].run(price);
-            runnerG[1][1].run(price);
-        }
-
         if (event > 0)
         {
             if (tP == 0.0)
@@ -318,6 +322,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
         cout << "Should never happen! " << longShort << endl;
     }
     //some prints
-    IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " << lastPrice << std::endl);
+    IFDEBUG(cout << "longShort: " << longShort << "; tP: " << tP << "; pnl: " << pnl << "; pnlPerc: " << pnlPerc << "; tempPnl: " << tempPnl << "; unrealized: " << computePnlLastPrice() << "; cashLimit: " << cashLimit << "; price: " << lastPrice << "; runner.type: " << runner.type << std::endl);
     return true;
 }

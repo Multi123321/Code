@@ -22,7 +22,7 @@ FXrateTrading::FXrateTrading(string rate, int nbOfCoastTraders, double deltas[])
     oneDay = 24.0 * 60.0 * 60.0 * 1000.0;
     FXrate = string(rate);
 
-    printDataHeader();
+    IFDEBUG(printDataHeader());
 
     coastTraderLong.resize(nbOfCoastTraders);
     coastTraderShort.resize(nbOfCoastTraders);
