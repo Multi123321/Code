@@ -52,7 +52,7 @@ bool LocalLiquidity::computeH1H2exp(__m256d dS)
     __m256d oneMinusExpDStarDivDelta = _mm256_sub_pd(_mm256_set1_pd(1.0), expDStarDivDelta);
     // H1 = -1 * exp(-dStar / delta) * log(exp(-dStar / delta)) - (1.0 - exp(-dStar / delta)) * log(1.0 - exp(-dStar / delta));
     H1 = _mm256_mul_pd(_mm256_mul_pd(expDStarDivDelta, AVXHelper::avxNegOne), AVXHelper::avxLogDouble(expDStarDivDelta));
-    H1 = _mm256_add_pd(H1, _mm256_mul_pd(oneMinusExpDStarDivDelta, AVXHelper::avxLogDouble(oneMinusExpDStarDivDelta)));
+    H1 = _mm256_sub_pd(H1, _mm256_mul_pd(oneMinusExpDStarDivDelta, AVXHelper::avxLogDouble(oneMinusExpDStarDivDelta)));
     // H2 = exp(-dStar / delta) * pow(log(exp(-dStar / delta)), 2.0) - (1.0 - exp(-dStar / delta)) * pow(log(1.0 - exp(-dStar / delta)), 2.0) - H1 * H1;
     H2 = _mm256_mul_pd(expDStarDivDelta, AVXHelper::avxPowDouble(AVXHelper::avxLogDouble(expDStarDivDelta), 2.0));
     H2 = _mm256_sub_pd(H2, _mm256_mul_pd(oneMinusExpDStarDivDelta, AVXHelper::avxPowDouble(AVXHelper::avxLogDouble(oneMinusExpDStarDivDelta), 2.0)));
@@ -223,7 +223,7 @@ bool LocalLiquidity::computation(PriceFeedData::Price price)
         surp = AVXHelper::setValues(surp, tmp, mask1);
 
         __m256d mask11 = _mm256_cmp_pd(event, _mm256_set1_pd(0.0), _CMP_GT_OS);
-        mask11 = _mm256_add_pd(mask11, mask1);
+        mask11 = AVXHelper::multMasks(mask11, mask1);
         //if (event > 0)
         if (!AVXHelper::isMaskZero(mask11))
         {
@@ -235,7 +235,7 @@ bool LocalLiquidity::computation(PriceFeedData::Price price)
         }
         __m256d mask12 = _mm256_cmp_pd(event, _mm256_set1_pd(0.0), _CMP_LT_OS);
         mask12 = AVXHelper::multMasks(mask12, AVXHelper::invert(mask11));
-        mask12 = _mm256_add_pd(mask12, mask1);
+        mask12 = AVXHelper::multMasks(mask12, mask1);
         //if (event < 0)
         if (!AVXHelper::isMaskZero(mask12))
         {

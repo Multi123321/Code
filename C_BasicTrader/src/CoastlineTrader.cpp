@@ -200,30 +200,6 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         cout << "Didn't compute liquidity!" << endl;
     }
 
-    mask tryToCloseMask = tryToClose(price);
-
-    IFDEBUG(
-        SERIAL_AVX(i) {
-            if (((long *)&tryToCloseMask)[i] != 0)
-            { /* -- Try to close position -- */
-                cout << "Close" << endl;
-            }
-        });
-    mask tryToCloseElse = AVXHelper::invert(tryToCloseMask);
-
-    if (AVXHelper::isMaskZero(tryToCloseElse))
-    {
-        IFDEBUG(
-            __m256d unrealized = computePnlLastPrice();
-            SERIAL_AVX(i) {
-                cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
-                     << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
-                     << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
-                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
-            });
-        return true;
-    }
-
     __m256d event = AVXHelper::avxZero;
 
     __m256d fraction = _mm256_set1_pd(1.0);
@@ -286,6 +262,30 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         }
     }
 
+    mask tryToCloseMask = tryToClose(price);
+
+    IFDEBUG(
+        SERIAL_AVX(i) {
+            if (((long *)&tryToCloseMask)[i] != 0)
+            { /* -- Try to close position -- */
+                cout << "Close" << endl;
+            }
+        });
+    mask tryToCloseElse = AVXHelper::invert(tryToCloseMask);
+
+    if (AVXHelper::isMaskZero(tryToCloseElse))
+    {
+        IFDEBUG(
+            __m256d unrealized = computePnlLastPrice();
+            SERIAL_AVX(i) {
+                cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
+                     << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
+                     << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
+                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i] << std::endl;
+            });
+        return true;
+    }
+
     if (longShort == 1)
     { // Long positions only
         mask maskEventSmallerZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
@@ -324,9 +324,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     {
                         sizes[i].push_front(((double *)&sizeToAdd)[i]);
                         prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.ask : price.bid);
+                        IFDEBUG(cout << "Open long" << endl);
                     }
-
-                    IFDEBUG(cout << "Open long" << endl);
                 }
 
                 assignCashTarget(maskTpEqualsZero);
@@ -355,8 +354,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     {
                         sizes[i].push_back(((double *)&sizeToAdd)[i]);
                         prices[i].push_back(((double *)&sign)[i] == 1.0 ? price.ask : price.bid);
+                        IFDEBUG(cout << "Cascade" << endl);
                     }
-                    IFDEBUG(cout << "Cascade" << endl);
                 }
             }
         }
@@ -372,8 +371,13 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
 
             SERIAL_AVX(avx)
             {
+                if (AVX_DOUBLE(maskEventGreaterZeroAndTpGreaterZero, avx) == 0)
+                {
+                    continue;
+                }
+                uint len = prices[avx].size();
                 int removed = 0;
-                for (uint i = 1; i < prices[avx].size(); ++i)
+                for (uint i = 1; i < len; ++i)
                 {
                     int idx = i - removed;
                     double tempP = (AVX_DOUBLE(tP, avx) > 0.0 ? log(AVX_DOUBLE(pricE, avx) / prices[avx].at(idx)) : log(prices[avx].at(idx) / AVX_DOUBLE(pricE, avx)));
@@ -436,9 +440,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     {
                         sizes[i].push_front(((double *)&sizeToAdd)[i]);
                         prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.bid : price.ask);
+                        IFDEBUG(cout << "Open short" << endl);
                     }
-
-                    IFDEBUG(cout << "Open short" << endl);
                 }
 
                 assignCashTarget(maskTpEqualsZero);
@@ -466,10 +469,9 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                     {
                         sizes[i].push_back(((double *)&sizeToAdd)[i]);
                         prices[i].push_back(((double *)&sign)[i] == 1.0 ? price.bid : price.ask);
+                        IFDEBUG(cout << "Cascade" << endl);
                     }
                 }
-
-                IFDEBUG(cout << "Cascade" << endl);
             }
         }
         mask maskEventLessZeroAndTpLessZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
@@ -484,6 +486,10 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
 
             SERIAL_AVX(avx)
             {
+                if (AVX_DOUBLE(maskEventLessZeroAndTpLessZero, avx) == 0)
+                {
+                    continue;
+                }
                 int removed = 0;
                 uint len = prices[avx].size();
                 for (uint i = 1; i < len; ++i)
@@ -519,8 +525,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         SERIAL_AVX(i) {
             cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
                  << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
-                 << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
-                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
+                 << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
+                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i] << std::endl;
         });
     return true;
 }

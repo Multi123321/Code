@@ -91,7 +91,6 @@ __m256d Runner::run(PriceFeedData::Price price)
         /*     if (log(price.bid / extreme) >= deltaUp) */
         if (!AVXHelper::isMaskZero(mask11))
         {
-
             prevExtreme = AVXHelper::setValues(prevExtreme, extreme, mask11);             /* prevExtreme = extreme; */
             prevExtremeTime = AVXHelper::setValues(prevExtremeTime, extremeTime, mask11); /* prevExtremeTime = extremeTime; */
             type = AVXHelper::setValues(type, AVXHelper::avxOne, mask11);                 /* type = 1; */
