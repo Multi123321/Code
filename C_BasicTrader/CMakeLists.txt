@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 2.8.7)
 
 enable_testing()
 
-set(CMAKE_CXX_COMPILER "g++-4.8")
-
 OPTION( ARCHITECTURE_OPTIMIZATION   "enables/disables the flag -march=native for gnu c++ compiler (on by default)" ON )
 OPTION( ENABLE_WALL "enables/disables the flag -Wall for gnu c++ compiler (on by default)" ON )
 OPTION( SPEED_MODE "enables/disables flags which result in a faster executable but disables debug flags (off by default)" OFF )
