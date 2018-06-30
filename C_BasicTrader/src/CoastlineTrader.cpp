@@ -127,7 +127,7 @@ __m256d CoastlineTrader::getPercPnl(PriceFeedData::Price price)
 
 mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
 {
-    mask result;
+    __m256d result;
 
     __m256d computedPnl = computePnl(price);
 
@@ -156,17 +156,17 @@ mask CoastlineTrader::tryToClose(PriceFeedData::Price price)
             assert(sizes[avx].empty());
             assert(prices[avx].empty());
             ((double *)&tP)[avx] = 0;
-            ((long *)&result)[avx] = 0xFFFFFFFFFFFFFFFF;
+            ((double *)&result)[avx] = 1.0;
         }
         else
         {
-            ((long *)&result)[avx] = 0x0000000000000000;
+            ((double *)&result)[avx] = 0.0;
         }
     }
-    return result;
+    return _mm256_cmp_pd_mask(result, AVXHelper::avxOne, _CMP_EQ_OS);
 }
 
-void CoastlineTrader::assignCashTarget(__m256d maskArg)
+void CoastlineTrader::assignCashTarget(mask maskArg)
 {
     __m256d temp = _mm256_mul_pd(_mm256_set1_pd(lastPrice), profitTarget);
     cashLimit = AVXHelper::setValues(cashLimit, temp, maskArg);
@@ -200,37 +200,13 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         cout << "Didn't compute liquidity!" << endl;
     }
 
-    mask tryToCloseMask = tryToClose(price);
-
-    IFDEBUG(
-        SERIAL_AVX(i) {
-            if (((long *)&tryToCloseMask)[i] != 0)
-            { /* -- Try to close position -- */
-                cout << "Close" << endl;
-            }
-        });
-    mask tryToCloseElse = AVXHelper::invert(tryToCloseMask);
-
-    if (AVXHelper::isMaskZero(tryToCloseElse))
-    {
-        IFDEBUG(
-            __m256d unrealized = computePnlLastPrice();
-            SERIAL_AVX(i) {
-                cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
-                     << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
-                     << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
-                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
-            });
-        return true;
-    }
-
     __m256d event = AVXHelper::avxZero;
 
     __m256d fraction = _mm256_set1_pd(1.0);
 
-    mask liqSmallerZeroPoint5 = _mm256_cmp_pd(liquidity.liq, _mm256_set1_pd(0.5), _CMP_LT_OS);
-    mask liqSmallerZeroPoint1 = _mm256_cmp_pd(liquidity.liq, _mm256_set1_pd(0.1), _CMP_LT_OS);
-    __m256d size = _mm256_set1_pd(1.0);
+    mask liqSmallerZeroPoint5 = _mm256_cmp_pd_mask(liquidity.liq, _mm256_set1_pd(0.5), _CMP_LT_OS);
+    mask liqSmallerZeroPoint1 = _mm256_cmp_pd_mask(liquidity.liq, _mm256_set1_pd(0.1), _CMP_LT_OS);
+    __m256d size = AVXHelper::avxOne;
     size = AVXHelper::setValues(size, 0.5, liqSmallerZeroPoint5);
     size = AVXHelper::setValues(size, 0.1, liqSmallerZeroPoint1);
 
@@ -286,29 +262,55 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
         }
     }
 
+    mask tryToCloseMask = tryToClose(price);
+
+    IFDEBUG(
+        __m256d close = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, tryToCloseMask);
+        SERIAL_AVX(i) {
+            if (((double *)&close)[i] == 1.0)
+            { /* -- Try to close position -- */
+                cout << "Close" << endl;
+            }
+        });
+    mask tryToCloseElse = AVXHelper::invert(tryToCloseMask);
+
+    if (AVXHelper::isMaskZero(tryToCloseElse))
+    {
+        IFDEBUG(
+            __m256d unrealized = computePnlLastPrice();
+            SERIAL_AVX(i) {
+                cout << dec << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
+                     << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
+                     << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
+                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i]
+                     << "; localLiquidity: " << ((double *)&liquidity.liq)[i] << std::endl;
+            });
+        return true;
+    }
+
     if (longShort == 1)
     { // Long positions only
-        mask maskEventSmallerZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
+        mask maskEventSmallerZero = _mm256_cmp_pd_mask(event, AVXHelper::avxZero, _CMP_LT_OS);
         maskEventSmallerZero = AVXHelper::multMasks(tryToCloseElse, maskEventSmallerZero);
         //if (event < 0) -> use maskEventSmallerZero
         if (!AVXHelper::isMaskZero(maskEventSmallerZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, AVXHelper::avxNegOne);
 
-            __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
+            mask maskTpEqualsZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_EQ_OS);
             maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventSmallerZero);
             //if (tP == 0.0) -> use maskTpEqualsZero
             if (!AVXHelper::isMaskZero(maskTpEqualsZero))
             { // Open long position
-                __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
-                maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
+                mask maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
+                maskOppositeInvAbsGreaterThan15 = AVXHelper::addMasks(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
                 maskOppositeInvAbsGreaterThan15 = AVXHelper::multMasks(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
                 //if (std::abs(oppositeInv) > 15.0) -> use maskOppositeInvAbsGreaterThan15
                 {
                     size = AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan15);
 
-                    __m256d maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
-                    maskOppositeInvAbsGreaterThan30 = _mm256_or_pd(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
+                    mask maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
+                    maskOppositeInvAbsGreaterThan30 = AVXHelper::addMasks(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
                     maskOppositeInvAbsGreaterThan30 = AVXHelper::multMasks(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
                     //if (std::abs(oppositeInv) > 30.0) -> use maskOppositeInvAbsGreaterThan30
                     {
@@ -318,20 +320,20 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 __m256d sizeToAdd = _mm256_mul_pd(sign, size);
                 tP = AVXHelper::addMasked(tP, sizeToAdd, maskTpEqualsZero);
 
+                __m256d tpEqualsZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpEqualsZero);
                 SERIAL_AVX(i)
                 {
-                    if (((double *)&maskTpEqualsZero)[i] != 0)
+                    if (((double *)&tpEqualsZero)[i] == 1.0)
                     {
                         sizes[i].push_front(((double *)&sizeToAdd)[i]);
                         prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.ask : price.bid);
+                        IFDEBUG(cout << "Open long" << endl);
                     }
-
-                    IFDEBUG(cout << "Open long" << endl);
                 }
 
                 assignCashTarget(maskTpEqualsZero);
             }
-            __m256d maskTpGreaterThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
+            mask maskTpGreaterThanZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_GT_OS);
             maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, AVXHelper::invert(maskTpEqualsZero));
             maskTpGreaterThanZero = AVXHelper::multMasks(maskTpGreaterThanZero, maskEventSmallerZero);
             //else if (tP > 0.0) -> use maskTpGreaterThanZero
@@ -340,7 +342,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFlong);
 
                 IFDEBUG(
-                    SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] < 0.0 && AVX_DOUBLE(maskTpGreaterThanZero, i) != 0) {
+                    __m256d tpGreaterThanZeroDebug = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpGreaterThanZero);
+                    SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] < 0.0 && AVX_DOUBLE(tpGreaterThanZeroDebug, i) != 0) {
                         cout << "Runner.type: " << AVX_DOUBLE(runner.type, i) << " Sign: " << AVX_DOUBLE(sign, i) << " size: " << AVX_DOUBLE(size, i) << " fraction: " << AVX_DOUBLE(fraction, i) << " shrinkFshort: " << AVX_DOUBLE(shrinkFshort, i) << endl;
                         cout << "How did this happen! increase position but neg size: " << AVX_DOUBLE(sizeToAdd, i) << endl;
                         exit(EXIT_FAILURE);
@@ -349,31 +352,38 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 increaseLong = AVXHelper::addMasked(increaseLong, 1.0, maskTpGreaterThanZero);
                 tP = AVXHelper::addMasked(tP, sizeToAdd, maskTpGreaterThanZero);
 
+                __m256d tpGreaterThanZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpGreaterThanZero);
                 SERIAL_AVX(i)
                 {
-                    if (((double *)&maskTpGreaterThanZero)[i] != 0)
+                    if (((double *)&tpGreaterThanZero)[i] == 1.0)
                     {
                         sizes[i].push_back(((double *)&sizeToAdd)[i]);
                         prices[i].push_back(((double *)&sign)[i] == 1.0 ? price.ask : price.bid);
+                        IFDEBUG(cout << "Cascade" << endl);
                     }
-                    IFDEBUG(cout << "Cascade" << endl);
                 }
             }
         }
-        mask maskEventGreaterZeroAndTpGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
-        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS));
+        mask maskEventGreaterZeroAndTpGreaterZero = _mm256_cmp_pd_mask(event, AVXHelper::avxZero, _CMP_GT_OS);
+        maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_GT_OS));
         maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, AVXHelper::invert(maskEventSmallerZero));
         maskEventGreaterZeroAndTpGreaterZero = AVXHelper::multMasks(maskEventGreaterZeroAndTpGreaterZero, tryToCloseElse);
         //else if (event > 0 && tP > 0.0)
         if (!AVXHelper::isMaskZero(maskEventGreaterZeroAndTpGreaterZero))
         { // Possibility to decrease long position only at intrinsic events
-            mask TpGreaterZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
+            mask TpGreaterZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_GT_OS);
             __m256d pricE = AVXHelper::setValues(_mm256_set1_pd(price.ask), price.bid, TpGreaterZero);
 
+            __m256d eventGreaterZeroAndTpGreaterZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskEventGreaterZeroAndTpGreaterZero);
             SERIAL_AVX(avx)
             {
+                if (AVX_DOUBLE(eventGreaterZeroAndTpGreaterZero, avx) == 0.0)
+                {
+                    continue;
+                }
+                uint len = prices[avx].size();
                 int removed = 0;
-                for (uint i = 1; i < prices[avx].size(); ++i)
+                for (uint i = 1; i < len; ++i)
                 {
                     int idx = i - removed;
                     double tempP = (AVX_DOUBLE(tP, avx) > 0.0 ? log(AVX_DOUBLE(pricE, avx) / prices[avx].at(idx)) : log(prices[avx].at(idx) / AVX_DOUBLE(pricE, avx)));
@@ -398,28 +408,28 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     }
     else if (longShort == -1)
     { // Short positions only
-        mask maskEventsGreaterZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_GT_OS);
+        mask maskEventsGreaterZero = _mm256_cmp_pd_mask(event, AVXHelper::avxZero, _CMP_GT_OS);
         maskEventsGreaterZero = AVXHelper::multMasks(tryToCloseElse, maskEventsGreaterZero);
         // if (event > 0) -> use maskEventsGreaterZero
         if (!AVXHelper::isMaskZero(maskEventsGreaterZero))
         {
             __m256d sign = _mm256_mul_pd(runner.type, _mm256_set1_pd(-1.0));
 
-            __m256d maskTpEqualsZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_EQ_OS);
+            mask maskTpEqualsZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_EQ_OS);
             maskTpEqualsZero = AVXHelper::multMasks(maskTpEqualsZero, maskEventsGreaterZero);
             // if (tP == 0.0) -> use maskTpEqualsZero
             if (!AVXHelper::isMaskZero(maskTpEqualsZero))
             { // Open short position
 
-                __m256d maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
-                maskOppositeInvAbsGreaterThan15 = _mm256_or_pd(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
+                mask maskOppositeInvAbsGreaterThan15 = _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(15.0), _CMP_GT_OS);
+                maskOppositeInvAbsGreaterThan15 = AVXHelper::addMasks(maskOppositeInvAbsGreaterThan15, _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(-15.0), _CMP_LT_OS));
                 maskOppositeInvAbsGreaterThan15 = AVXHelper::multMasks(maskTpEqualsZero, maskOppositeInvAbsGreaterThan15);
                 //if (std::abs(oppositeInv) > 15.0) -> use maskOppositeInvAbsGreaterThan15
                 {
                     size = AVXHelper::setValues(size, 1.0, maskOppositeInvAbsGreaterThan15);
 
-                    __m256d maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
-                    maskOppositeInvAbsGreaterThan30 = _mm256_or_pd(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
+                    mask maskOppositeInvAbsGreaterThan30 = _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(30.0), _CMP_GT_OS);
+                    maskOppositeInvAbsGreaterThan30 = AVXHelper::addMasks(maskOppositeInvAbsGreaterThan30, _mm256_cmp_pd_mask(oppositeInv, _mm256_set1_pd(-30.0), _CMP_LT_OS));
                     maskOppositeInvAbsGreaterThan30 = AVXHelper::multMasks(maskOppositeInvAbsGreaterThan30, maskOppositeInvAbsGreaterThan15);
                     //if (std::abs(oppositeInv) > 30.0) -> use maskOppositeInvAbsGreaterThan30
                     {
@@ -430,20 +440,20 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 __m256d sizeToAdd = AVXHelper::setValues(AVXHelper::avxZero, _mm256_mul_pd(sign, size), maskTpEqualsZero);
                 tP = _mm256_add_pd(tP, sizeToAdd);
 
+                __m256d tpEqualsZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpEqualsZero);
                 SERIAL_AVX(i)
                 {
-                    if (((double *)&maskTpEqualsZero)[i] != 0)
+                    if (((double *)&tpEqualsZero)[i] == 1.0)
                     {
                         sizes[i].push_front(((double *)&sizeToAdd)[i]);
                         prices[i].push_front(((double *)&sign)[i] == 1.0 ? price.bid : price.ask);
+                        IFDEBUG(cout << "Open short" << endl);
                     }
-
-                    IFDEBUG(cout << "Open short" << endl);
                 }
 
                 assignCashTarget(maskTpEqualsZero);
             }
-            __m256d maskTpLessThanZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS);
+            mask maskTpLessThanZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_LT_OS);
             maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, AVXHelper::invert(maskTpEqualsZero));
             maskTpLessThanZero = AVXHelper::multMasks(maskTpLessThanZero, maskEventsGreaterZero);
             // else if (tP < 0.0) -> use maskTpLessThanZero
@@ -451,7 +461,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             {
                 __m256d sizeToAdd = AVXHelper::multiply(sign, size, fraction, shrinkFshort);
                 IFDEBUG(
-                    SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0 && AVX_DOUBLE(maskTpLessThanZero, i) != 0) {
+                    __m256d tpLessThanZeroDebug = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpLessThanZero);
+                    SERIAL_AVX(i) {if (((double*)&sizeToAdd)[i] > 0.0 && AVX_DOUBLE(tpLessThanZeroDebug, i) != 0) {
                         cout << "Runner.type: " << AVX_DOUBLE(runner.type, i) << " Sign: " << AVX_DOUBLE(sign, i) << " size: " << AVX_DOUBLE(size, i) << " fraction: " << AVX_DOUBLE(fraction, i) << " shrinkFshort: " << AVX_DOUBLE(shrinkFshort, i) << endl;
                         cout << "How did this happen! increase position but pos size: " << AVX_DOUBLE(sizeToAdd, i) << endl;
                         exit(EXIT_FAILURE);
@@ -460,30 +471,35 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 increaseShort = AVXHelper::addMasked(increaseShort, 1.0, maskTpLessThanZero);
                 tP = AVXHelper::addMasked(tP, sizeToAdd, maskTpLessThanZero);
 
+                __m256d tpLessThanZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskTpLessThanZero);
                 SERIAL_AVX(i)
                 {
-                    if (((double *)&maskTpLessThanZero)[i] != 0)
+                    if (((double *)&tpLessThanZero)[i] == 1.0)
                     {
                         sizes[i].push_back(((double *)&sizeToAdd)[i]);
                         prices[i].push_back(((double *)&sign)[i] == 1.0 ? price.bid : price.ask);
+                        IFDEBUG(cout << "Cascade" << endl);
                     }
                 }
-
-                IFDEBUG(cout << "Cascade" << endl);
             }
         }
-        mask maskEventLessZeroAndTpLessZero = _mm256_cmp_pd(event, AVXHelper::avxZero, _CMP_LT_OS);
-        maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_LT_OS));
+        mask maskEventLessZeroAndTpLessZero = _mm256_cmp_pd_mask(event, AVXHelper::avxZero, _CMP_LT_OS);
+        maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_LT_OS));
         maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, AVXHelper::invert(maskEventsGreaterZero));
         maskEventLessZeroAndTpLessZero = AVXHelper::multMasks(maskEventLessZeroAndTpLessZero, tryToCloseElse);
         // else if (event < 0.0 && tP < 0.0) -> use maskEventLessZeroAndTpLessZero
         if (!AVXHelper::isMaskZero(maskEventLessZeroAndTpLessZero))
         {
-            mask TpGreaterZero = _mm256_cmp_pd(tP, AVXHelper::avxZero, _CMP_GT_OS);
+            mask TpGreaterZero = _mm256_cmp_pd_mask(tP, AVXHelper::avxZero, _CMP_GT_OS);
             __m256d pricE = AVXHelper::setValues(_mm256_set1_pd(price.ask), price.bid, TpGreaterZero);
 
+            __m256d eventLessZeroAndTpLessZero = AVXHelper::setValues(AVXHelper::avxZero, AVXHelper::avxOne, maskEventLessZeroAndTpLessZero);
             SERIAL_AVX(avx)
             {
+                if (AVX_DOUBLE(eventLessZeroAndTpLessZero, avx) == 0.0)
+                {
+                    continue;
+                }
                 int removed = 0;
                 uint len = prices[avx].size();
                 for (uint i = 1; i < len; ++i)
@@ -517,10 +533,11 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
     IFDEBUG(
         __m256d unrealized = computePnlLastPrice();
         SERIAL_AVX(i) {
-            cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
+            cout << dec << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
                  << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
-                 << ((double *)&tempPnl)[i] << "; unreallized:" << ((double *)&unrealized)[i] << "; cashLimit: "
-                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << std::endl;
+                 << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
+                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i]
+                 << "; localLiquidity: " << ((double *)&liquidity.liq)[i] << std::endl;
         });
     return true;
 }

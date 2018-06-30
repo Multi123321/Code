@@ -80,18 +80,17 @@ __m256d Runner::run(PriceFeedData::Price price)
 
     /* ########## Set Masks ########## */
 
-    __m256d mask1 = _mm256_cmp_pd(type, AVXHelper::avxNegOne, _CMP_EQ_OS);
+    mask mask1 = _mm256_cmp_pd_mask(type, AVXHelper::avxNegOne, _CMP_EQ_OS);
     /* if (type == -1) */
     if (!AVXHelper::isMaskZero(mask1))
     {
         __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.bid), extreme);
         tmp = AVXHelper::avxLogDouble(tmp);
-        __m256d mask11 = _mm256_cmp_pd(tmp, deltaUp, _CMP_GE_OS);
+        mask mask11 = _mm256_cmp_pd_mask(tmp, deltaUp, _CMP_GE_OS);
         mask11 = AVXHelper::multMasks(mask11, mask1);
         /*     if (log(price.bid / extreme) >= deltaUp) */
         if (!AVXHelper::isMaskZero(mask11))
         {
-
             prevExtreme = AVXHelper::setValues(prevExtreme, extreme, mask11);             /* prevExtreme = extreme; */
             prevExtremeTime = AVXHelper::setValues(prevExtremeTime, extremeTime, mask11); /* prevExtremeTime = extremeTime; */
             type = AVXHelper::setValues(type, AVXHelper::avxOne, mask11);                 /* type = 1; */
@@ -102,7 +101,7 @@ __m256d Runner::run(PriceFeedData::Price price)
             reference = AVXHelper::setValues(reference, price.ask, mask11);               /* reference = price.ask; */
             returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxOne, mask11); /* return 1; */
         }
-        __m256d mask12 = _mm256_cmp_pd(_mm256_set1_pd(price.ask), extreme, _CMP_LT_OS);
+        mask mask12 = _mm256_cmp_pd_mask(_mm256_set1_pd(price.ask), extreme, _CMP_LT_OS);
         mask12 = AVXHelper::multMasks(mask12, AVXHelper::invert(mask11));
         mask12 = AVXHelper::multMasks(mask12, mask1);
         /*     if (price.ask < extreme) */
@@ -119,7 +118,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
             tmp = _mm256_div_pd(extreme, reference);
             tmp = AVXHelper::avxLogDouble(tmp);
-            __m256d mask121 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaStarUp, AVXHelper::avxNegOne), _CMP_LE_OS);
+            mask mask121 = _mm256_cmp_pd_mask(tmp, _mm256_mul_pd(deltaStarUp, AVXHelper::avxNegOne), _CMP_LE_OS);
             mask121 = AVXHelper::multMasks(mask121, mask12);
             /*         if (log(extreme / reference) <= -deltaStarUp) */
             if (!AVXHelper::isMaskZero(mask121))
@@ -129,13 +128,13 @@ __m256d Runner::run(PriceFeedData::Price price)
             }
         }
     }
-    __m256d mask2 = AVXHelper::multMasks(_mm256_cmp_pd(type, AVXHelper::avxOne, _CMP_EQ_OS), AVXHelper::invert(mask1)); /* else if (type == 1) */
+    mask mask2 = AVXHelper::multMasks(_mm256_cmp_pd_mask(type, AVXHelper::avxOne, _CMP_EQ_OS), AVXHelper::invert(mask1)); /* else if (type == 1) */
     /* else if (type == 1) */
     if (!AVXHelper::isMaskZero(mask2))
     {
         __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
         tmp = AVXHelper::avxLogDouble(tmp);
-        __m256d mask21 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaDown, AVXHelper::avxNegOne), _CMP_LE_OS);
+        mask mask21 = _mm256_cmp_pd_mask(tmp, _mm256_mul_pd(deltaDown, AVXHelper::avxNegOne), _CMP_LE_OS);
         mask21 = AVXHelper::multMasks(mask21, mask2);
         /*     if (log(price.ask / extreme) <= -deltaDown) */
         if (!AVXHelper::isMaskZero(mask21))
@@ -150,7 +149,7 @@ __m256d Runner::run(PriceFeedData::Price price)
             reference = AVXHelper::setValues(reference, price.bid, mask21);                  /* reference = price.bid; */
             returnValues = AVXHelper::setValues(returnValues, AVXHelper::avxNegOne, mask21); /* return -1; */
         }
-        __m256d mask22 = _mm256_cmp_pd(_mm256_set1_pd(price.bid), extreme, _CMP_GT_OS);
+        mask mask22 = _mm256_cmp_pd_mask(_mm256_set1_pd(price.bid), extreme, _CMP_GT_OS);
         mask22 = AVXHelper::multMasks(mask22, AVXHelper::invert(mask21));
         mask22 = AVXHelper::multMasks(mask22, mask2);
         /*     if (price.bid > extreme) */
@@ -166,7 +165,7 @@ __m256d Runner::run(PriceFeedData::Price price)
 
             tmp = _mm256_div_pd(extreme, reference);
             tmp = AVXHelper::avxLogDouble(tmp);
-            __m256d mask221 = _mm256_cmp_pd(tmp, deltaStarDown, _CMP_GE_OS);
+            mask mask221 = _mm256_cmp_pd_mask(tmp, deltaStarDown, _CMP_GE_OS);
             mask221 = AVXHelper::multMasks(mask221, mask22);
             /*         if (log(extreme / reference) >= deltaStarDown) */
             if (!AVXHelper::isMaskZero(mask221))
