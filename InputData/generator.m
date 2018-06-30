@@ -1,4 +1,4 @@
-#!/usr/local/bin/octave -qf
+#!/usr/bin/octave -qf
 
 mu = 0;
 k = 0.00005;
@@ -12,7 +12,7 @@ n = 1000000;           % Anzahl der Knicke/Tage
 T = (1:n);          
 M = 1;          % Anzahl der Pfade
 
-for i=1:4
+for i=1:8
     if exist(['kurs' num2str(i) '.csv'], 'file') == 2 
         continue;
     end
@@ -34,7 +34,7 @@ for i=1:4
     out(:,1) = 0:200:200*(n-1);
     out(:,2) = S;
 
-    csvwrite(filename, out);
+    csvwrite(['kurs' num2str(i) '.csv'], out);
 
     disp([num2str(i) ' done']);
 end;

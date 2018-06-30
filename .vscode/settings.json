@@ -113,5 +113,5 @@
         "ostream": "cpp"
     },
     "editor.formatOnSave": true,
-    "editor.formatOnPaste": true
+    "files.eol": "\n"
 }
