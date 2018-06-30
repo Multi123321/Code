@@ -105,6 +105,7 @@
                 "${workspaceFolder}",
                 "/mnt/c/libraries/lib1/include",
                 "C:/libraries/lib2/include",
+                "${localappdata}/Packages/CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc/LocalState/rootfs/usr/lib/gcc/x86_64-linux-gnu/5/include",
                 "${localappdata}/lxss/rootfs/usr/include/c++/4.8",
                 "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu/c++/4.8",
                 "${localappdata}/lxss/rootfs/usr/include/c++/4.8/backward",
@@ -119,6 +120,7 @@
                 "path": [
                     "${workspaceFolder}",
                     "/mnt/c/libraries",
+                    "${localappdata}/Packages/CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc/LocalState/rootfs/usr/lib/gcc/x86_64-linux-gnu/5/include",
                     "${localappdata}/lxss/rootfs/usr/include/c++/4.8",
                     "${localappdata}/lxss/rootfs/usr/include/x86_64-linux-gnu/c++/4.8",
                     "${localappdata}/lxss/rootfs/usr/include/c++/4.8/backward",

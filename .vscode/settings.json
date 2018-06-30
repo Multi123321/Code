@@ -110,7 +110,8 @@
         "string_view": "cpp",
         "iostream": "cpp",
         "valarray": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "system_error": "cpp"
     },
     "editor.formatOnSave": true,
     "editor.formatOnPaste": true
