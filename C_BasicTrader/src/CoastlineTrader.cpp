@@ -281,7 +281,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
                 cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
                      << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
                      << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
-                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i] << std::endl;
+                     << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i]
+                     << "; localLiquidity: " << ((double *)&liquidity.liq)[i] << std::endl;
             });
         return true;
     }
@@ -526,7 +527,8 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, __m256d opposite
             cout << "longShort: " << longShort << "; tP: " << ((double *)&tP)[i] << "; pnl: "
                  << ((double *)&pnl)[i] << "; pnlPerc: " << ((double *)&pnlPerc)[i] << "; tempPnl: "
                  << ((double *)&tempPnl)[i] << "; unrealized: " << ((double *)&unrealized)[i] << "; cashLimit: "
-                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i] << std::endl;
+                 << ((double *)&cashLimit)[i] << "; price: " << lastPrice << "; runner.type: " << ((double *)&runner.type)[i]
+                 << "; localLiquidity: " << ((double *)&liquidity.liq)[i] << std::endl;
         });
     return true;
 }
