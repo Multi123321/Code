@@ -12,12 +12,12 @@ using namespace std;
 
 typedef __m256d mask;
 
-//#define test
+//#define AVX_LIST
 
 class CoastlineTrader
 {
 private:
-#ifdef test
+#ifdef AVX_LIST
   vector<__m256d, boost::alignment::aligned_allocator<double, 4>> prices;
   vector<__m256d, boost::alignment::aligned_allocator<double, 4>> sizes;
 #else
