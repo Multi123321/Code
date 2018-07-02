@@ -4,18 +4,26 @@
 #include <string>
 #include "LocalLiquidity.h"
 #include "Runner.h"
-#include <deque>
 #include <x86intrin.h>
+#include <vector>
+#include <boost/align/aligned_allocator.hpp>
 
 using namespace std;
 
 typedef __m256d mask;
 
+//#define test
+
 class CoastlineTrader
 {
 private:
-  deque<double> prices[4];
-  deque<double> sizes[4];
+#ifdef test
+  vector<__m256d, boost::alignment::aligned_allocator<double, 4>> prices;
+  vector<__m256d, boost::alignment::aligned_allocator<double, 4>> sizes;
+#else
+  vector<double> prices[4];
+  vector<double> sizes[4];
+#endif
 
   __m256d deltaUp, deltaDown, deltaOriginal;
   __m256d shrinkFlong, shrinkFshort;

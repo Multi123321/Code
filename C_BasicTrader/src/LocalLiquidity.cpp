@@ -129,7 +129,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
     if (!AVXHelper::isMaskZero(mask1))
     {
         __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.bid), extreme);
-        tmp = AVXHelper::avxLogDouble(tmp);
+        tmp = AVXHelper::avxLogDoubleMasked(tmp, mask1);
         __m256d mask11 = _mm256_cmp_pd(tmp, deltaUp, _CMP_GE_OS);
         mask11 = AVXHelper::multMasks(mask11, mask1);
         /*     if (log(price.bid / extreme) >= deltaUp) */
@@ -149,7 +149,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
             extreme = AVXHelper::setValues(extreme, price.ask, mask12); /* extreme = price.ask; */
         }
         tmp = _mm256_div_pd(reference, extreme);
-        tmp = AVXHelper::avxLogDouble(tmp);
+        tmp = AVXHelper::avxLogDoubleMasked(tmp, mask1);
         __m256d mask13 = _mm256_cmp_pd(tmp, dStar, _CMP_GE_OS);
         mask13 = AVXHelper::multMasks(mask13, AVXHelper::invert(mask11));
         mask13 = AVXHelper::multMasks(mask13, mask1);
@@ -165,7 +165,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
     if (!AVXHelper::isMaskZero(mask2))
     {
         __m256d tmp = _mm256_div_pd(_mm256_set1_pd(price.ask), extreme);
-        tmp = AVXHelper::avxLogDouble(tmp);
+        tmp = AVXHelper::avxLogDoubleMasked(tmp, mask2);
         __m256d mask21 = _mm256_cmp_pd(tmp, _mm256_mul_pd(deltaDown, AVXHelper::avxNegOne), _CMP_LE_OS);
         mask21 = AVXHelper::multMasks(mask21, mask2);
         /*     if (log(price.ask / extreme) <= -deltaDown) */
@@ -185,7 +185,7 @@ __m256d LocalLiquidity::run(PriceFeedData::Price price)
             extreme = AVXHelper::setValues(extreme, price.bid, mask22); /* extreme = price.bid; */
         }
         tmp = _mm256_div_pd(reference, extreme);
-        tmp = AVXHelper::avxLogDouble(tmp);
+        tmp = AVXHelper::avxLogDoubleMasked(tmp, mask2);
         __m256d mask23 = _mm256_cmp_pd(tmp, _mm256_mul_pd(dStar, AVXHelper::avxNegOne), _CMP_LE_OS);
         mask23 = AVXHelper::multMasks(mask23, AVXHelper::invert(mask21));
         mask23 = AVXHelper::multMasks(mask23, mask2);

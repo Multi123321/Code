@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <string>
-#include <deque>
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
