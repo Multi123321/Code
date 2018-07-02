@@ -34,7 +34,7 @@ int main(int argc, const char *argv[])
     config::loadConfig();
 
     // TODO Currency configuration
-    const int numberOfCurrencies = 8;
+    const int numberOfCurrencies = 16;
     string ccyList[numberOfCurrencies] = {
         "kurs1.csv",
         "kurs2.csv",
@@ -44,6 +44,14 @@ int main(int argc, const char *argv[])
         "kurs6.csv",
         "kurs7.csv",
         "kurs8.csv",
+		"kurs9.csv",
+        "kurs10.csv",
+        "kurs11.csv",
+        "kurs12.csv",
+        "kurs13.csv",
+        "kurs14.csv",
+        "kurs15.csv",
+        "kurs16.csv",
     };
     //const int numberOfCurrencies = 1;
     //string ccyList[numberOfCurrencies] = {"EUR_USD.csv"};

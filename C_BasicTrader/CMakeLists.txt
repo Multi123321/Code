@@ -9,7 +9,7 @@ OPTION( SHOW_OPTIMIZATION "enables/disables flags which shows optimization dumps
 OPTION( ACTIVATE_LIKWID "enables/disables likwid markers (on by default)" ON )
 
 IF( CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-   SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wextra -Wshadow -pedantic -fopenmp -pthread")
+   SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wextra -Wshadow -pedantic -fopenmp -pthread -I/opt/apps/common/boost/1.65.1/include -L/opt/apps/common/boost/1.65.1/lib")
    IF( ARCHITECTURE_OPTIMIZATION )
       SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native" )
    ENDIF()
