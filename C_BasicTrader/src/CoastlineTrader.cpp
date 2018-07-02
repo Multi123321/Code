@@ -195,9 +195,9 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                 }
                 double sizeToAdd = sign * size;
                 tP += sizeToAdd;
-                sizes.push_front(sizeToAdd);
+                sizes.push_back(sizeToAdd);
 
-                prices.push_front(sign == 1 ? price.ask : price.bid);
+                prices.push_back(sign == 1 ? price.ask : price.bid);
                 assignCashTarget();
                 IFDEBUG(cout << "Open long" << endl);
             }
@@ -267,9 +267,9 @@ bool CoastlineTrader::runPriceAsymm(PriceFeedData::Price price, double oppositeI
                     sizeToAdd = -sizeToAdd;
                 }
                 tP += sizeToAdd;
-                sizes.push_front(sizeToAdd);
+                sizes.push_back(sizeToAdd);
 
-                prices.push_front(sign == 1 ? price.bid : price.ask);
+                prices.push_back(sign == 1 ? price.bid : price.ask);
                 IFDEBUG(cout << "Open short" << endl);
                 assignCashTarget();
             }
